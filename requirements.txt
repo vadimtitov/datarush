@@ -1,0 +1,6 @@
+pydantic
+streamlit
+pandas
+boto3
+envarify
+requests
