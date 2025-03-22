@@ -4,3 +4,4 @@ pandas
 boto3
 envarify
 requests
+python-dotenv
