@@ -5,6 +5,7 @@ from abc import ABC, abstractmethod
 from typing import Iterator, Type, TypeVar, get_type_hints
 
 import pandas as pd
+import streamlit as st
 from pydantic import BaseModel, ValidationError
 from streamlit.delta_generator import DeltaGenerator
 
@@ -40,7 +41,7 @@ class Process(ABC):
 
     @classmethod
     def from_streamlit(
-        cls, st: DeltaGenerator, tableset: Tableset | None = None, key: int | str | None = None
+        cls, tableset: Tableset | None = None, key: int | str | None = None
     ) -> Operation | None:
         try:
             model = model_from_streamlit(cls.schema(), st=st, tableset=tableset, key=key)
@@ -49,7 +50,7 @@ class Process(ABC):
             return None
 
     def update_from_streamlit(
-        self, st: DeltaGenerator, tableset: Tableset | None = None, key: int | str | None = None
+        self, tableset: Tableset | None = None, key: int | str | None = None
     ) -> bool:
         model = model_from_streamlit(self.schema(), st=st, tableset=tableset, key=key)
         if self.model == model:
@@ -186,6 +187,12 @@ class Dataflow:
         for operation in self.operations:
             if operation.is_enabled:
                 self._current_tableset = operation.operate(self._current_tableset)
+
+
+def get_dataflow() -> Dataflow:
+    if "dataflow" not in st.session_state:
+        st.session_state["dataflow"] = Dataflow()
+    return st.session_state["dataflow"]
 
 
 _TModel = TypeVar("_TModel", bound=BaseModel)
