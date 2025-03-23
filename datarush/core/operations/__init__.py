@@ -1,15 +1,26 @@
 from typing import Type
 
 from datarush.core.dataflow import Operation
-from datarush.core.operations.dropna import DropNaValues
-from datarush.core.operations.filter_row import FilterByColumn
-from datarush.core.operations.sort import SortByColumn
+from datarush.core.operations.sources import http_source, local_file_source, s3_object_source
+from datarush.core.operations.transformations import dropna, filter_row, sort
 
-OPERATION_TYPES: list[Type[Operation]] = [
-    DropNaValues,
-    SortByColumn,
-    FilterByColumn,
+DATA_SOURCE_OPERATION_TYPES: list[Type[Operation]] = [
+    http_source.HttpSource,
+    local_file_source.LocalFileSource,
+    s3_object_source.S3ObjectSource,
 ]
+
+TRANSFORM_OPERATION_TYPES: list[Type[Operation]] = [
+    dropna.DropNaValues,
+    sort.SortByColumn,
+    filter_row.FilterByColumn,
+]
+
+DATA_SINK_OPERATION_TYPES: list[Type[Operation]] = []
+
+OPERATION_TYPES = (
+    DATA_SOURCE_OPERATION_TYPES + TRANSFORM_OPERATION_TYPES + DATA_SINK_OPERATION_TYPES
+)
 
 
 def get_operation_type_by_title(title: str) -> Type[Operation]:

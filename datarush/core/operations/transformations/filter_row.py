@@ -17,7 +17,7 @@ class FilterByColumn(Operation):
     model: FilterRowModel
 
     def summary(self) -> str:
-        return f"Filter {self.model.table} where {self.model.column} is {self.model.value}"
+        return f"Filter `{self.model.table}` where {self.model.column} is {self.model.value}"
 
     def operate(self, tableset: Tableset) -> Tableset:
         table, column, value = self.model.table, self.model.column, self.model.value

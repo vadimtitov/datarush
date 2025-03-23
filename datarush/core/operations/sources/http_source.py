@@ -3,9 +3,9 @@ from io import BytesIO
 import requests
 from pydantic import BaseModel, Field
 
-from datarush.core.dataflow import Source, Table
-from datarush.core.sources.local_file_source import read_file
+from datarush.core.dataflow import Operation, Tableset
 from datarush.core.types import ContentType
+from datarush.utils.misc import read_file
 
 
 class HttpSourceModel(BaseModel):
@@ -16,14 +16,19 @@ class HttpSourceModel(BaseModel):
     table_name: str = Field(title="table_name", default="http_table")
 
 
-class HttpSource(Source):
+class HttpSource(Operation):
     name = "http_request"
     title = "HTTP Request"
     description = "Send an HTTP request to get a file"
     model: HttpSourceModel
 
-    def read(self) -> Table:
+    def summary(self) -> str:
+        return f"Load HTTP resource {self.model.url} as `{self.model.table_name}` table"
+
+    def operate(self, tableset: Tableset) -> Tableset:
         response = requests.get(self.model.url)
         response.raise_for_status()
         file = BytesIO(response.content)
-        return Table(name=self.model.table_name, df=read_file(file, self.model.content_type))
+        df = read_file(file, self.model.content_type)
+        tableset.set_df(self.model.table_name, df)
+        return tableset

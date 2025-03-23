@@ -17,7 +17,7 @@ class SortByColumn(Operation):
     model: SortColumnModel
 
     def summary(self) -> str:
-        return f"Sort {self.model.table} by {self.model.column}"
+        return f"Sort `{self.model.table}` by {self.model.column}"
 
     def operate(self, tableset: Tableset) -> Tableset:
         table, column = self.model.table, self.model.column

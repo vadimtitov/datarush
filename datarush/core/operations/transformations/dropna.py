@@ -16,7 +16,7 @@ class DropNaValues(Operation):
     model: DropnaModel
 
     def summary(self) -> str:
-        return f"Drop NA values in {self.model.table}"
+        return f"Drop NA values in `{self.model.table}`"
 
     def operate(self, tableset: Tableset) -> Tableset:
         tableset[self.model.table].df.dropna(inplace=True)

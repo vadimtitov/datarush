@@ -46,7 +46,6 @@ class Process(ABC):
             model = model_from_streamlit(cls.schema(), st=st, tableset=tableset, key=key)
             return cls(model)
         except ValidationError as e:
-            print(e)
             return None
 
     def update_from_streamlit(
@@ -88,7 +87,7 @@ class Tableset:
         return table.df
 
     def set_df(self, name: str, df: pd.DataFrame) -> None:
-        self._table_map[name].df = df
+        self._table_map[name] = Table(name, df)
 
     def __getitem__(self, key: str) -> Table:
         return self._table_map[key]
@@ -106,90 +105,64 @@ class Tableset:
         return bool(self._table_map)
 
 
-class Source(Process):
-
-    @abstractmethod
-    def read(self) -> Table:
-        raise NotImplementedError
-
-
 class Operation(Process):
+    """
+    Base class for operations applied to a Tableset using a specified model.
+    """
 
     is_enabled: bool = True
     model: _TModel
 
     @abstractmethod
     def operate(self, table_set: Tableset) -> Tableset:
+        """
+        Perform the operation on the given Tableset.
+
+        Args:
+            table_set (Tableset): The input Tableset.
+
+        Returns:
+            Tableset: The transformed Tableset.
+        """
         raise NotImplementedError
 
     @abstractmethod
     def summary(self) -> str:
-        raise NotImplementedError
+        """
+        Provide a summary of the operation.
 
-    def __init__(self, model: _TModel) -> None:
-        self.model = model
+        Returns:
+            str: A human-readable summary.
+        """
+        raise NotImplementedError
 
     @classmethod
     def schema(cls) -> Type[_TModel]:
+        """
+        Get the model schema/type used by this operation.
+
+        Returns:
+            Type[_TModel]: The model class type.
+        """
         return get_type_hints(cls)["model"]
-
-
-class Sink(Process):
-
-    @property
-    @abstractmethod
-    def table_name(self) -> str:
-        raise NotImplementedError
-
-    @abstractmethod
-    def write(self, table: Table) -> None:
-        raise NotImplementedError
 
 
 class Dataflow:
 
     def __init__(
         self,
-        sources: list[Source] | None = None,
         operations: list[Operation] | None = None,
-        sinks: list[Sink] = None,
     ) -> None:
-        self._sources = sources or []
+        self._current_tableset = Tableset([])
         self._operations = operations or []
-        self._sinks = sinks or []
-
-        self._original_tableset: Tableset | None = None
-        self._transformed_tableset: Tableset | None = None
 
     @property
-    def sources(self) -> list[Source]:
-        return self._sources
+    def current_tableset(self) -> Tableset:
+        return self._current_tableset
 
     @property
     def operations(self) -> list[Operation]:
         return self._operations
-
-    @property
-    def sinks(self) -> list[Sink]:
-        return self._sinks
-
-    @property
-    def original_tableset(self) -> Tableset:
-        if not self.sources:
-            raise ValueError("No sources")
-
-        LOG.info("Reading data from sources")
-        if self._original_tableset is None:
-            self._original_tableset = Tableset(source.read() for source in self.sources)
-            self._transformed_tableset = self._original_tableset.copy()
-        return self._original_tableset
-
-    @property
-    def transformed_tableset(self) -> Tableset | None:
-        return self._transformed_tableset
-
-    def add_source(self, source: Source) -> None:
-        self._sources.append(source)
 
     def add_operation(self, operation: Operation) -> None:
         self._operations.append(operation)
@@ -208,27 +181,11 @@ class Dataflow:
             raise IndexError("position is out of range")
         self._operations.pop(position)
 
-    def add_sink(self, sink: Sink) -> None:
-        self._sinks.append(sink)
-
-    def write_sinks(self, tableset: Tableset) -> None:
-        LOG.info("Writing data to sinks")
-        for sink in self.sinks:
-            table = tableset[sink.table_name]
-            sink.write(table)
-
-    def transform(self) -> Tableset:
-        self._transformed_tableset = self._original_tableset.copy()
-
+    def run(self) -> None:
+        self._current_tableset = Tableset([])
         for operation in self.operations:
             if operation.is_enabled:
-                self._transformed_tableset = operation.operate(self._transformed_tableset)
-        return self._transformed_tableset
-
-    def run(self) -> None:
-        LOG.info("Running dataflow")
-        self.write_sinks(tableset=self.transform())
+                self._current_tableset = operation.operate(self._current_tableset)
 
 
-# _TSource = TypeVar("_TSource", bound=Source)
 _TModel = TypeVar("_TModel", bound=BaseModel)
