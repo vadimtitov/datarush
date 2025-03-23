@@ -46,7 +46,7 @@ def show_operations() -> None:
     to_remove = []
     # operation controls
     for i, op in enumerate(dataflow.operations):
-        with st.expander(truncate(op.summary(), n=80), expanded=False):
+        with st.expander(truncate(op.summary(), n=200), expanded=False):
             cols = st.columns([1, 1, 1, 1])
             if cols[0].button("⬆", key=f"up_{i}") and i > 0:
                 dataflow.move_operation(i, i - 1)

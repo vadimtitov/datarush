@@ -7,7 +7,6 @@ from typing import Iterator, Type, TypeVar, get_type_hints
 import pandas as pd
 import streamlit as st
 from pydantic import BaseModel, ValidationError
-from streamlit.delta_generator import DeltaGenerator
 
 from datarush.exceptions import UnknownTableError
 from datarush.utils.types import model_from_streamlit
