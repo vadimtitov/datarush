@@ -43,7 +43,12 @@ class Process(ABC):
         cls, tableset: Tableset | None = None, key: int | str | None = None
     ) -> Operation | None:
         try:
-            model = model_from_streamlit(cls.schema(), st=st, tableset=tableset, key=key)
+            model = model_from_streamlit(
+                cls.schema(),
+                st=st,
+                tableset=tableset,
+                key=key,
+            )
             return cls(model)
         except ValidationError as e:
             return None
@@ -51,7 +56,9 @@ class Process(ABC):
     def update_from_streamlit(
         self, tableset: Tableset | None = None, key: int | str | None = None
     ) -> bool:
-        model = model_from_streamlit(self.schema(), st=st, tableset=tableset, key=key)
+        model = model_from_streamlit(
+            self.schema(), st=st, tableset=tableset, key=key, current_model=self.model
+        )
         if self.model == model:
             return False
 
@@ -192,6 +199,10 @@ def get_dataflow() -> Dataflow:
     if "dataflow" not in st.session_state:
         st.session_state["dataflow"] = Dataflow()
     return st.session_state["dataflow"]
+
+
+def set_dataflow(dataflow: Dataflow) -> None:
+    st.session_state["dataflow"] = dataflow
 
 
 _TModel = TypeVar("_TModel", bound=BaseModel)

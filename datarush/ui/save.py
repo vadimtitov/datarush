@@ -1,7 +1,7 @@
 import streamlit as st
 
 from datarush.core.dataflow import get_dataflow
-from datarush.core.template_manager import dataflow_to_json
+from datarush.core.templates import dataflow_to_template
 
 
 def save_page():
@@ -9,7 +9,7 @@ def save_page():
 
     dataflow = get_dataflow()
 
-    st.json(dataflow_to_json(dataflow))
+    st.json(dataflow_to_template(dataflow))
 
     # Parse and display JSON
     if st.button("Save"):

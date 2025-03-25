@@ -26,6 +26,7 @@ def model_from_streamlit(
     st: DeltaGenerator,
     tableset: Tableset | None = None,
     key: str | int | None = None,
+    current_model: _TModel | None = None,
 ) -> _TModel:
     model_dict = {}
 
@@ -36,29 +37,64 @@ def model_from_streamlit(
             "help": field.description,
         }
         default = field.default if field.default is not PydanticUndefined else None
+        current_value = getattr(current_model, name) if current_model else None
 
-        if name == "table" and tableset:
-            value = st.selectbox(options=list(tableset), **kwargs)
-
-        elif name == "tables" and tableset:
-            value = st.multiselect(options=list(tableset), **kwargs)
-
-        elif (name == "column" or name == "columns") and tableset:
-            relevant = []
-            table = model_dict.get("table")
-            if table:
-                relevant.append(table)
-
-            tables = model_dict.get("tables")
-            if tables:
-                relevant.extend(tables)
-
-            columns = {col for name in relevant for col in tableset.get_df(name).columns}
-
-            if name == "column":
-                value = st.selectbox(options=columns, **kwargs)
+        if name == "table":
+            if tableset:
+                options = list(tableset)
+                index = options.index(current_value) if current_value is not None else 0
+                value = st.selectbox(options=options, index=index, **kwargs)
             else:
-                value = st.multiselect(options=columns, **kwargs)
+                if current_value is not None:
+                    value = st.selectbox(options=[current_value], index=0, **kwargs)
+                else:
+                    raise ValueError(f"No tableset or current value, can't display: {name}")
+
+        elif name == "tables":
+            if tableset:
+                options = list(tableset)
+                value = st.multiselect(options=options, default=current_value or None, **kwargs)
+            else:
+                if current_value is not None:
+                    value = st.multiselect(options=current_value, default=current_value, **kwargs)
+                else:
+                    raise ValueError(f"No tableset or current value, can't display: {name}")
+
+        elif name in ("column", "columns"):
+            if tableset:
+                relevant_tables = []
+                table = model_dict.get("table")
+                if table:
+                    relevant_tables.append(table)
+
+                tables = model_dict.get("tables")
+                if tables:
+                    relevant_tables.extend(tables)
+
+                # TODO: sort alphanumerically?
+                relevant_columns = list(
+                    {col for name in relevant_tables for col in tableset.get_df(name).columns}
+                )
+                if name == "column":
+                    index = (
+                        relevant_columns.index(current_value) if current_value is not None else 0
+                    )
+                    value = st.selectbox(options=relevant_columns, index=index, **kwargs)
+                else:
+                    value = st.multiselect(
+                        options=relevant_columns, default=current_value, **kwargs
+                    )
+            else:
+                if current_value is not None:
+                    if name == "column":
+                        value = st.selectbox(options=[current_value], index=0, **kwargs)
+                    else:
+                        value = st.multiselect(
+                            options=current_value, default=current_value, **kwargs
+                        )
+                else:
+                    raise ValueError(f"No tableset or current value, can't display: {name}")
+
         elif _is_string_enum(field.annotation):
             value = st.selectbox(options=list(field.annotation), **kwargs)
         elif issubclass(field.annotation, bytes):
@@ -68,11 +104,17 @@ def model_from_streamlit(
             value = file.getvalue() if file else None
 
         elif issubclass(field.annotation, str):
-            value = st.text_input(value=default or "", **kwargs)
+            value = st.text_input(
+                value=current_value if current_value is not None else (default or ""), **kwargs
+            )
         elif issubclass(field.annotation, int):
-            value = st.number_input(value=default, step=1, **kwargs)
+            value = st.number_input(
+                value=current_value if current_value is not None else default, step=1, **kwargs
+            )
         elif issubclass(field.annotation, float):
-            value = st.number_input(value=default, step=0.01, **kwargs)
+            value = st.number_input(
+                value=current_value if current_value is not None else default, step=0.01, **kwargs
+            )
         else:
             raise TypeError(f"Not supported type: {field.annotation}")
 

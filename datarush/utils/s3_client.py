@@ -1,4 +1,5 @@
 from io import BytesIO
+from typing import Any
 
 import boto3
 from botocore.client import Config
@@ -24,3 +25,19 @@ class S3Client:
 
     def put_object(self, bucket: str, key: str, body: BytesIO) -> None:
         self._client.put_object(Bucket=bucket, Key=key, Body=body)
+
+    def delete_object(self, bucket: str, key: str) -> None:
+        self._client.delete_object(Bucket=bucket, Key=key)
+
+    def list_object_keys(self, bucket: str, prefix: str) -> list[dict[str, Any]]:
+        prefix = prefix.strip("/")
+        response = self._client.list_objects_v2(Bucket=bucket, Prefix=prefix)
+        objects = response.get("Contents", [])
+        return [obj["Key"] for obj in objects]
+
+    def list_folders(self, bucket: str, prefix: str) -> list[str]:
+        prefix = prefix.strip("/") + "/"
+        keys = self.list_object_keys(bucket, prefix)
+        if prefix == "/":
+            return list({key.split("/")[0] for key in keys})
+        return list({key.split(prefix)[1].split("/")[0] for key in keys})
