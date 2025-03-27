@@ -45,20 +45,18 @@ def model_from_streamlit(
                 index = options.index(current_value) if current_value is not None else 0
                 value = st.selectbox(options=options, index=index, **kwargs)
             else:
-                if current_value is not None:
-                    value = st.selectbox(options=[current_value], index=0, **kwargs)
-                else:
-                    raise ValueError(f"No tableset or current value, can't display: {name}")
+                value = st.selectbox(
+                    options=[current_value] if current_value is not None else [], **kwargs
+                )
 
         elif name == "tables":
             if tableset:
                 options = list(tableset)
                 value = st.multiselect(options=options, default=current_value or None, **kwargs)
             else:
-                if current_value is not None:
-                    value = st.multiselect(options=current_value, default=current_value, **kwargs)
-                else:
-                    raise ValueError(f"No tableset or current value, can't display: {name}")
+                value = st.multiselect(
+                    options=current_value or [], default=current_value, **kwargs
+                )
 
         elif name in ("column", "columns"):
             if tableset:
@@ -71,8 +69,7 @@ def model_from_streamlit(
                 if tables:
                     relevant_tables.extend(tables)
 
-                # TODO: sort alphanumerically?
-                relevant_columns = list(
+                relevant_columns = sorted(
                     {col for name in relevant_tables for col in tableset.get_df(name).columns}
                 )
                 if name == "column":
@@ -85,18 +82,18 @@ def model_from_streamlit(
                         options=relevant_columns, default=current_value, **kwargs
                     )
             else:
-                if current_value is not None:
-                    if name == "column":
-                        value = st.selectbox(options=[current_value], index=0, **kwargs)
-                    else:
-                        value = st.multiselect(
-                            options=current_value, default=current_value, **kwargs
-                        )
+                if name == "column":
+                    value = st.selectbox(
+                        options=[current_value] if current_value is not None else [], **kwargs
+                    )
                 else:
-                    raise ValueError(f"No tableset or current value, can't display: {name}")
+                    value = st.multiselect(
+                        options=current_value or [], default=current_value, **kwargs
+                    )
 
         elif _is_string_enum(field.annotation):
             value = st.selectbox(options=list(field.annotation), **kwargs)
+
         elif issubclass(field.annotation, bytes):
             content_type: ContentType | None = model_dict.get("content_type")
             extension = content_type.extension() if content_type else None
@@ -107,14 +104,17 @@ def model_from_streamlit(
             value = st.text_input(
                 value=current_value if current_value is not None else (default or ""), **kwargs
             )
+
         elif issubclass(field.annotation, int):
             value = st.number_input(
                 value=current_value if current_value is not None else default, step=1, **kwargs
             )
+
         elif issubclass(field.annotation, float):
             value = st.number_input(
                 value=current_value if current_value is not None else default, step=0.01, **kwargs
             )
+
         else:
             raise TypeError(f"Not supported type: {field.annotation}")
 
