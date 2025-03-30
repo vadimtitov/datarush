@@ -100,6 +100,11 @@ def model_from_streamlit(
             file = st.file_uploader("Choose File", type=extension, key=f"local_file_file_df_{key}")
             value = file.getvalue() if file else None
 
+        elif field.annotation is bool:
+            value = st.checkbox(
+                value=current_value if current_value is not None else default, **kwargs
+            )
+
         elif issubclass(field.annotation, str):
             value = st.text_input(
                 value=current_value if current_value is not None else (default or ""), **kwargs
