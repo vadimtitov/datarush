@@ -5,3 +5,5 @@ boto3
 envarify
 requests
 python-dotenv
+streamlit-ace
+jinja2

@@ -1,4 +1,7 @@
+import json
+
 import streamlit as st
+from streamlit_ace import THEMES, st_ace
 
 from datarush.core.dataflow import get_dataflow
 from datarush.core.templates import dataflow_to_template
@@ -9,8 +12,16 @@ def save_page():
 
     dataflow = get_dataflow()
 
-    st.json(dataflow_to_template(dataflow))
+    template = dataflow_to_template(dataflow)
+
+    content_ace = st_ace(
+        json.dumps(template, indent=4),
+        language="json",
+        theme="twilight",
+    )
 
     # Parse and display JSON
     if st.button("Save"):
         st.success("Template saved")
+
+    st.data_editor({}, use_container_width=True)
