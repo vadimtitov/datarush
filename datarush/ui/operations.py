@@ -47,23 +47,38 @@ def show_operations() -> None:
     # operation controls
     for i, op in enumerate(dataflow.operations):
         with st.expander(truncate(op.summary(), n=200), expanded=False):
-            cols = st.columns([1, 1, 1, 1])
-            if cols[0].button("⬆", key=f"up_{i}") and i > 0:
-                dataflow.move_operation(i, i - 1)
-                # st.rerun()
-                return
-            if cols[1].button("⬇", key=f"down_{i}") and i < len(dataflow.operations) - 1:
-                dataflow.move_operation(i, i + 1)
-                # st.rerun()
-                return
-            if cols[2].button("🗑️", key=f"remove_{i}"):
-                to_remove.append(i)
-            dataflow.operations[i].is_enabled = cols[3].checkbox(
-                "Enable", value=op.is_enabled, key=f"enable_{i}"
-            )
-
             if op.update_from_streamlit(dataflow.current_tableset, key=i):
                 st.rerun()
+
+            # dataflow.operations[i].is_enabled = cols[].checkbox(
+            #     "Enable", value=op.is_enabled, key=f"enable_{i}"
+            # )
+
+            cols = st.columns([9, 1, 1, 1, 1])
+
+            if (
+                cols[1].button(
+                    "", key=f"manmode_{i}", help="Manual Input Mode", icon=":material/data_object:"
+                )
+                and i > 0
+            ):
+                pass
+            if (
+                cols[2].button("", key=f"up_{i}", help="Move up", icon=":material/arrow_upward:")
+                and i > 0
+            ):
+                dataflow.move_operation(i, i - 1)
+                st.rerun()
+            if (
+                cols[3].button(
+                    "", key=f"down_{i}", help="Move down", icon=":material/arrow_downward:"
+                )
+                and i < len(dataflow.operations) - 1
+            ):
+                dataflow.move_operation(i, i + 1)
+                st.rerun()
+            if cols[4].button("", key=f"remove_{i}", help="Remove", icon=":material/close:"):
+                to_remove.append(i)
 
     for index in reversed(to_remove):
         dataflow.remove_operation(index)
