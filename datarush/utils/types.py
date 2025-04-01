@@ -94,7 +94,7 @@ def model_from_streamlit(
         elif _is_string_enum(field.annotation):
             value = st.selectbox(options=list(field.annotation), **kwargs)
 
-        elif issubclass(field.annotation, bytes):
+        elif field.annotation is bytes:
             content_type: ContentType | None = model_dict.get("content_type")
             extension = content_type.extension() if content_type else None
             file = st.file_uploader("Choose File", type=extension, key=f"local_file_file_df_{key}")
@@ -110,12 +110,12 @@ def model_from_streamlit(
                 value=current_value if current_value is not None else (default or ""), **kwargs
             )
 
-        elif issubclass(field.annotation, int):
+        elif field.annotation is int:
             value = st.number_input(
                 value=current_value if current_value is not None else default, step=1, **kwargs
             )
 
-        elif issubclass(field.annotation, float):
+        elif field.annotation is float:
             value = st.number_input(
                 value=current_value if current_value is not None else default, step=0.01, **kwargs
             )
@@ -137,7 +137,6 @@ def model_from_streamlit(
     # multiselect = st.multiselect("Choose multiple", ["X", "Y", "Z"])  # List[str]
     # text_area = st.text_area("Enter multi-line text")  # str
     # submit = st.form_submit_button("Submit")
-
 
 def _is_string_enum(type_: Type) -> bool:
     origin_cls = get_origin(type_) or type_
