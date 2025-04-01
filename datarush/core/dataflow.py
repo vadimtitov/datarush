@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Iterator, Type, TypeVar, get_type_hints
+from typing import Any, Iterator, Type, TypeVar, get_type_hints
 
 import pandas as pd
 import streamlit as st
@@ -15,6 +15,8 @@ LOG = logging.getLogger(__name__)
 
 
 class Process(ABC):
+
+    advanced_mode: bool = False
 
     def __init__(self, model: _TModel) -> None:
         self.model = model
@@ -57,7 +59,12 @@ class Process(ABC):
         self, tableset: Tableset | None = None, key: int | str | None = None
     ) -> bool:
         model = model_from_streamlit(
-            self.schema(), st=st, tableset=tableset, key=key, current_model=self.model
+            self.schema(),
+            st=st,
+            tableset=tableset,
+            key=key,
+            current_model=self.model,
+            advanced_mode=self.advanced_mode,
         )
         if self.model == model:
             return False

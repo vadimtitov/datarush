@@ -58,11 +58,15 @@ def show_operations() -> None:
 
             if (
                 cols[1].button(
-                    "", key=f"manmode_{i}", help="Manual Input Mode", icon=":material/data_object:"
+                    "",
+                    key=f"manmode_{i}",
+                    help="UI Input Mode" if op.advanced_mode else "Advanced Input Mode",
+                    icon=":material/view_list:" if op.advanced_mode else ":material/data_object:",
                 )
                 and i > 0
             ):
-                pass
+                op.advanced_mode = not op.advanced_mode
+                st.rerun()
             if (
                 cols[2].button("", key=f"up_{i}", help="Move up", icon=":material/arrow_upward:")
                 and i > 0
