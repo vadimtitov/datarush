@@ -30,5 +30,10 @@ def to_file(df: pd.DataFrame, content_type: ContentType) -> BytesIO:
     return file
 
 
-def truncate(text: str, n: int) -> str:
-    return text if len(text) <= n else text[: n - 3] + "..."
+def truncate(text: str, max_len: int) -> str:
+    return text if len(text) <= max_len else text[: max_len - 3] + "..."
+
+
+def crossed_out(text: str) -> str:
+    """Cross out text for display."""
+    return f"~~{text}~~" if text else ""

@@ -2,7 +2,7 @@ import streamlit as st
 
 from datarush.core.dataflow import get_dataflow
 from datarush.core.operations import OPERATION_TYPES, get_operation_type_by_title
-from datarush.utils.misc import truncate
+from datarush.utils.misc import crossed_out, truncate
 
 
 def operations_page():
@@ -44,18 +44,19 @@ def show_operations() -> None:
     dataflow = get_dataflow()
 
     to_remove = []
-    # operation controls
+
     for i, op in enumerate(dataflow.operations):
-        with st.expander(truncate(op.summary(), n=200), expanded=False):
+        op_summary = truncate(op.summary(), max_len=200)
+        with st.expander(op_summary if op.is_enabled else crossed_out(op_summary), expanded=False):
             if op.update_from_streamlit(dataflow.current_tableset, key=i):
                 st.rerun()
 
-            # dataflow.operations[i].is_enabled = cols[].checkbox(
-            #     "Enable", value=op.is_enabled, key=f"enable_{i}"
-            # )
+            #
+            # Operation controls
+            #
+            cols = st.columns([8, 1, 1, 1, 1, 1])
 
-            cols = st.columns([9, 1, 1, 1, 1])
-
+            # Advanced mode toggle
             if (
                 cols[1].button(
                     "",
@@ -67,12 +68,16 @@ def show_operations() -> None:
             ):
                 op.advanced_mode = not op.advanced_mode
                 st.rerun()
+
+            # Move up button
             if (
                 cols[2].button("", key=f"up_{i}", help="Move up", icon=":material/arrow_upward:")
                 and i > 0
             ):
                 dataflow.move_operation(i, i - 1)
                 st.rerun()
+
+            # Move down button
             if (
                 cols[3].button(
                     "", key=f"down_{i}", help="Move down", icon=":material/arrow_downward:"
@@ -81,7 +86,19 @@ def show_operations() -> None:
             ):
                 dataflow.move_operation(i, i + 1)
                 st.rerun()
-            if cols[4].button("", key=f"remove_{i}", help="Remove", icon=":material/close:"):
+
+            # Enable/disable toggle
+            if cols[4].button(
+                "",
+                key=f"toggle_{i}",
+                help="Disable operation" if op.is_enabled else "Enable operation",
+                icon=":material/toggle_on:" if op.is_enabled else ":material/toggle_off:",
+            ):
+                op.is_enabled = not op.is_enabled
+                st.rerun()
+
+            # Remove button
+            if cols[5].button("", key=f"remove_{i}", help="Remove", icon=":material/close:"):
                 to_remove.append(i)
 
     for index in reversed(to_remove):
