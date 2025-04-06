@@ -9,71 +9,9 @@ import streamlit as st
 from pydantic import BaseModel, ValidationError
 
 from datarush.exceptions import UnknownTableError
-from datarush.utils.types import model_from_streamlit
+from datarush.utils.types import model_dict_from_streamlit, model_validate_jinja2
 
 LOG = logging.getLogger(__name__)
-
-
-class Process(ABC):
-
-    advanced_mode: bool = False
-
-    def __init__(self, model: _TModel) -> None:
-        self.model = model
-
-    @property
-    @abstractmethod
-    def name(self) -> str:
-        raise NotImplementedError
-
-    @property
-    @abstractmethod
-    def title(self) -> str:
-        raise NotImplementedError
-
-    @property
-    @abstractmethod
-    def description(self) -> str:
-        raise NotImplementedError
-
-    @classmethod
-    def schema(cls) -> Type[_TModel]:
-        return get_type_hints(cls)["model"]
-
-    @classmethod
-    def from_streamlit(
-        cls, tableset: Tableset | None = None, key: int | str | None = None
-    ) -> Operation | None:
-        try:
-            model = model_from_streamlit(
-                cls.schema(),
-                st=st,
-                tableset=tableset,
-                key=key,
-            )
-            return cls(model)
-        except ValidationError as e:
-            return None
-
-    def update_from_streamlit(
-        self, tableset: Tableset | None = None, key: int | str | None = None
-    ) -> bool:
-        model = model_from_streamlit(
-            self.schema(),
-            st=st,
-            tableset=tableset,
-            key=key,
-            current_model=self.model,
-            advanced_mode=self.advanced_mode,
-        )
-        if self.model == model:
-            return False
-
-        if st.button("Update", f"operation_update_button_{key}"):
-            self.model = model
-            return True
-
-        return False
 
 
 class Table:
@@ -119,13 +57,104 @@ class Tableset:
         return bool(self._table_map)
 
 
-class Operation(Process):
-    """
-    Base class for operations applied to a Tableset using a specified model.
-    """
+class Operation(ABC):
 
     is_enabled: bool = True
-    model: _TModel
+    advanced_mode: bool = False
+
+    def __init__(self, model_dict: dict[str, Any], advanced_mode: bool = False) -> None:
+        self._model_dict = model_dict
+        self._template_context = {}
+        self.advanced_mode = advanced_mode
+
+    @property
+    def model_dict(self) -> dict[str, Any]:
+        """
+        Get the model dictionary.
+
+        Returns:
+            dict[str, Any]: The model dictionary.
+        """
+        return self._model_dict
+
+    @property
+    def model(self) -> _TModel:
+        """
+        Get the model instance.
+        """
+        if not self.advanced_mode:
+            return self.schema().model_validate(self.model_dict)
+
+        return model_validate_jinja2(
+            self.schema(), self.model_dict, context=self._template_context
+        )
+
+    @classmethod
+    def schema(cls) -> Type[_TModel]:
+        """
+        Get the model schema/type used by this operation.
+
+        Returns:
+            Type[_TModel]: The model class type.
+        """
+        return get_type_hints(cls)["model"]
+
+    def update_template_context(self, context: dict[str, Any]) -> None:
+        """
+        Update the template context for Jinja2 rendering.
+
+        Args:
+            context (dict[str, Any]): The new context to use.
+        """
+        self._template_context = context
+
+    @classmethod
+    def from_streamlit(
+        cls, tableset: Tableset | None = None, key: int | str | None = None
+    ) -> Operation | None:
+        try:
+            model_dict = model_dict_from_streamlit(
+                cls.schema(),
+                tableset=tableset,
+                key=key,
+            )
+            return cls(model_dict)
+        except ValidationError as e:
+            return None
+
+    def update_from_streamlit(
+        self, tableset: Tableset | None = None, key: int | str | None = None
+    ) -> bool:
+        model_dict = model_dict_from_streamlit(
+            self.schema(),
+            tableset=tableset,
+            key=key,
+            current_model_dict=self.model_dict,
+            advanced_mode=self.advanced_mode,
+        )
+        if self.model_dict == model_dict:
+            return False
+
+        if st.button("Update", f"operation_update_button_{key}"):
+            self._model_dict = model_dict
+            return True
+
+        return False
+
+    @property
+    @abstractmethod
+    def name(self) -> str:
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def title(self) -> str:
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def description(self) -> str:
+        raise NotImplementedError
 
     @abstractmethod
     def operate(self, table_set: Tableset) -> Tableset:
@@ -149,16 +178,6 @@ class Operation(Process):
             str: A human-readable summary.
         """
         raise NotImplementedError
-
-    @classmethod
-    def schema(cls) -> Type[_TModel]:
-        """
-        Get the model schema/type used by this operation.
-
-        Returns:
-            Type[_TModel]: The model class type.
-        """
-        return get_type_hints(cls)["model"]
 
 
 class Dataflow:
@@ -199,6 +218,9 @@ class Dataflow:
         self._current_tableset = Tableset([])
         for operation in self.operations:
             if operation.is_enabled:
+                operation.update_template_context(
+                    {"bucket": "awesome", "object_key": "datasets/sample/test/data.csv"}
+                )
                 self._current_tableset = operation.operate(self._current_tableset)
 
 

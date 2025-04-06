@@ -3,9 +3,10 @@ from __future__ import annotations
 from enum import Enum
 from typing import TYPE_CHECKING, Any, Callable, Type, TypeVar, get_args, get_origin
 
+import jinja2
+import streamlit as st
 from pydantic import BaseModel
 from pydantic_core import PydanticUndefined
-from streamlit.delta_generator import DeltaGenerator
 from streamlit_ace import st_ace  # Ensure you have the streamlit-ace library installed
 
 from datarush.core.types import ContentType
@@ -23,14 +24,14 @@ def types_are_equal(type1: Type, type2: Type) -> bool:
 _TModel = TypeVar("_TModel", bound=BaseModel)
 
 
-def model_from_streamlit(
+def model_dict_from_streamlit(
     schema: Type[_TModel],
-    st: DeltaGenerator,
     tableset: Tableset | None = None,
     key: str | int | None = None,
-    current_model: _TModel | None = None,
+    current_model_dict: dict[str, Any] | None = None,
     advanced_mode: bool = False,
-) -> _TModel:
+) -> dict[str, Any]:
+    template_context = {"bucket": "awesome", "object_key": "datasets/sample/test/data.csv"}
     model_dict = {}
 
     for name, field in schema.model_fields.items():
@@ -40,27 +41,44 @@ def model_from_streamlit(
             "help": field.description,
         }
         default = field.default if field.default is not PydanticUndefined else None
-        current_value = getattr(current_model, name) if current_model else None
+        current_value = current_model_dict.get(name, None) if current_model_dict else None
 
+        ################################
+        ######### ADVANCED MODE ########
+        ################################
         if advanced_mode:
-            # value = convert_to_type(
-            #     st.text_input(value=str(current_value), **kwargs), to_type=field.annotation
-            # )
-            st.write(kwargs["label"])
-            raw_value = st_ace(
+            # Display the editor for jinja2 template
+            st.write(f"{kwargs["label"]} template")
+            value = st_ace(
                 str(current_value),
                 language="django",
                 theme="twilight",
                 keybinding="vscode",
-                min_lines=1,
-                max_lines=5,
+                # height=70,
+                min_lines=3,
+                # max_lines=1,
                 show_gutter=False,
                 auto_update=False,
-                key=kwargs["key"],
+                key=kwargs["key"] + "_ace",
             )
-            value = render_jinja2_template(raw_value, context={})
-            value = convert_to_type(value, to_type=field.annotation)
 
+            # Try to render the template and display the result
+            try:
+                rendered_value = render_jinja2_template(value, context=template_context)
+                # validate by trying to convert
+                convert_to_type(rendered_value, to_type=field.annotation)
+                # Display the rendered value
+                st.write(f"{kwargs["label"]} value")
+                st.code(rendered_value)
+                st.write("___")
+            except jinja2.exceptions.TemplateSyntaxError as e:
+                st.error(f"Error rendering template: {e}")
+            except ValueError as e:
+                st.error(f"Error converting value: {e} to type {field.annotation}")
+
+        ################################
+        ############ UI MODE ###########
+        ################################
         elif name == "table":
             if tableset:
                 options = list(tableset)
@@ -148,22 +166,34 @@ def model_from_streamlit(
         if value is not None:
             model_dict[name] = value
 
-    return schema.model_validate(model_dict)
+    # values in advanced mode are jinja2 templates strings, no point in validating them
+    if not advanced_mode:
+        schema.model_validate(model_dict)
 
-    # text = st.text_input("Enter text")  # str
-    # number = st.number_input("Enter number")  # int or float
-    # slider = st.slider("Pick a value", 0, 100)  # int or float
-    # checkbox = st.checkbox("Agree?")  # bool
-    # radio = st.radio("Select an option", ["Option 1", "Option 2"])  # str
-    # selectbox = st.selectbox("Choose", ["A", "B", "C"])  # str
-    # multiselect = st.multiselect("Choose multiple", ["X", "Y", "Z"])  # List[str]
-    # text_area = st.text_area("Enter multi-line text")  # str
-    # submit = st.form_submit_button("Submit")
+    return model_dict
 
 
-def _is_string_enum(type_: Type) -> bool:
-    origin_cls = get_origin(type_) or type_
-    return issubclass(origin_cls, str) and issubclass(origin_cls, Enum)
+def model_validate_jinja2(
+    model_type: Type[_TModel], model_dict: dict[str, Any], context: dict[str, Any]
+) -> _TModel:
+    """
+    Validate a model using Jinja2 templates.
+    Args:
+        model_type (Type[_TModel]): The Pydantic model type to validate.
+        model_dict (dict[str, Any]): The dictionary containing the model data where values can be Jinja2 templates.
+        context (dict[str, Any]): The context for rendering Jinja2 templates.
+    Returns:
+        _TModel: The validated model instance.
+    """
+    rendered_dict = {}
+    for name, field in model_type.model_fields.items():
+        default = field.default if field.default is not PydanticUndefined else None
+        template = model_dict.get(name, default)
+        value = render_jinja2_template(template, context=context)
+        if value is not None:
+            rendered_dict[name] = convert_to_type(value, field.annotation)
+
+    return model_type.model_validate(rendered_dict)
 
 
 def convert_to_type(value: str, to_type: type[T]) -> T:
@@ -177,10 +207,18 @@ def convert_to_type(value: str, to_type: type[T]) -> T:
     Returns:
         Any: The converted value in the target type.
     """
+    if _is_string_enum(to_type):
+        return to_type(value)  # type: ignore
+
     if to_type not in TYPE_PARSERS:
         raise ValueError(f"Unsupported type {to_type} for conversion")
     parser = TYPE_PARSERS[to_type]
     return parser(value)
+
+
+def _is_string_enum(type_: Type) -> bool:
+    origin_cls = get_origin(type_) or type_
+    return issubclass(origin_cls, str) and issubclass(origin_cls, Enum)
 
 
 def _to_bool(value: str) -> bool:

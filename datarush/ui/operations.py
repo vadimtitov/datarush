@@ -61,7 +61,11 @@ def show_operations() -> None:
                 cols[1].button(
                     "",
                     key=f"manmode_{i}",
-                    help="UI Input Mode" if op.advanced_mode else "Advanced Input Mode",
+                    help=(
+                        "Switch to UI input mode"
+                        if op.advanced_mode
+                        else "Switch to advanced input mode"
+                    ),
                     icon=":material/view_list:" if op.advanced_mode else ":material/data_object:",
                 )
                 and i > 0

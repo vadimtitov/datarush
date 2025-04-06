@@ -46,15 +46,23 @@ def template_to_dataflow(template: dict) -> Dataflow:
 
     for operation in template["operations"]:
         operation_type = get_operation_type_by_name(operation["name"])
-        model = operation_type.schema().model_validate(operation["data"])
-        operations.append(operation_type(model))
+        operations.append(
+            operation_type(
+                model_dict=operation["data"],
+                advanced_mode=operation.get("advanced_mode", False),
+            )
+        )
 
     return Dataflow(operations=operations)
 
 
 def dataflow_to_template(dataflow: Dataflow) -> dict:
     operations = [
-        {"name": operation.name, "data": operation.model.model_dump()}
+        {
+            "name": operation.name,
+            "data": operation.model_dict,
+            "advanced_mode": operation.advanced_mode,
+        }
         for operation in dataflow.operations
     ]
     return {"operations": operations}
