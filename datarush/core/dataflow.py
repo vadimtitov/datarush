@@ -9,7 +9,8 @@ import streamlit as st
 from pydantic import BaseModel, ValidationError
 
 from datarush.exceptions import UnknownTableError
-from datarush.utils.types import model_dict_from_streamlit, model_validate_jinja2
+from datarush.form import model_dict_from_streamlit
+from datarush.utils.jinja2 import model_validate_jinja2
 
 LOG = logging.getLogger(__name__)
 

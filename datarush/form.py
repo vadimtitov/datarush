@@ -1,36 +1,39 @@
 from __future__ import annotations
 
-from enum import Enum
-from typing import TYPE_CHECKING, Any, Callable, Type, TypeVar, get_args, get_origin
+from typing import TYPE_CHECKING, Any, Type
 
 import jinja2
 import streamlit as st
 from pydantic import BaseModel
 from pydantic_core import PydanticUndefined
-from streamlit_ace import st_ace  # Ensure you have the streamlit-ace library installed
+from streamlit_ace import st_ace
 
 from datarush.core.types import ContentType
 from datarush.utils.jinja2 import render_jinja2_template
+from datarush.utils.type_utils import convert_to_type, is_string_enum
 
 if TYPE_CHECKING:
     from datarush.core.dataflow import Tableset
 
 
-def types_are_equal(type1: Type, type2: Type) -> bool:
-    """Checks if two generic types (like list[str] and list[int]) are the same."""
-    return get_origin(type1) == get_origin(type2) and get_args(type1) == get_args(type2)
-
-
-_TModel = TypeVar("_TModel", bound=BaseModel)
-
-
-def model_dict_from_streamlit(
-    schema: Type[_TModel],
+def model_dict_from_streamlit[T: BaseModel](
+    schema: Type[T],
     tableset: Tableset | None = None,
     key: str | int | None = None,
     current_model_dict: dict[str, Any] | None = None,
     advanced_mode: bool = False,
 ) -> dict[str, Any]:
+    """
+    Render a streamlit form based on a Pydantic model and return the values as a dictionary.
+    Args:
+        schema : The Pydantic model class.
+        tableset: Optional tableset for table-related fields.
+        key: Optional key for Streamlit widgets.
+        current_model_dict: Optional current model dictionary to pre-fill values.
+        advanced_mode: Flag to enable advanced mode with Jinja2 template rendering.
+    Returns:
+        dict[str, Any]: The dictionary containing the values from the Streamlit widgets.
+    """
     template_context = {"bucket": "awesome", "object_key": "datasets/sample/test/data.csv"}
     model_dict = {}
 
@@ -131,7 +134,7 @@ def model_dict_from_streamlit(
                         options=current_value or [], default=current_value, **kwargs
                     )
 
-        elif _is_string_enum(field.annotation):
+        elif is_string_enum(field.annotation):
             value = st.selectbox(options=list(field.annotation), **kwargs)
 
         elif field.annotation is bytes:
@@ -171,70 +174,3 @@ def model_dict_from_streamlit(
         schema.model_validate(model_dict)
 
     return model_dict
-
-
-def model_validate_jinja2(
-    model_type: Type[_TModel], model_dict: dict[str, Any], context: dict[str, Any]
-) -> _TModel:
-    """
-    Validate a model using Jinja2 templates.
-    Args:
-        model_type (Type[_TModel]): The Pydantic model type to validate.
-        model_dict (dict[str, Any]): The dictionary containing the model data where values can be Jinja2 templates.
-        context (dict[str, Any]): The context for rendering Jinja2 templates.
-    Returns:
-        _TModel: The validated model instance.
-    """
-    rendered_dict = {}
-    for name, field in model_type.model_fields.items():
-        default = field.default if field.default is not PydanticUndefined else None
-        template = model_dict.get(name, default)
-        value = render_jinja2_template(template, context=context)
-        if value is not None:
-            rendered_dict[name] = convert_to_type(value, field.annotation)
-
-    return model_type.model_validate(rendered_dict)
-
-
-def convert_to_type(value: str, to_type: type[T]) -> T:
-    """
-    Convert a string value to the specified type using a dictionary of parsers.
-
-    Args:
-        value (str): The string to be converted.
-        to_type (type): The target type to which the value should be converted.
-
-    Returns:
-        Any: The converted value in the target type.
-    """
-    if _is_string_enum(to_type):
-        return to_type(value)  # type: ignore
-
-    if to_type not in TYPE_PARSERS:
-        raise ValueError(f"Unsupported type {to_type} for conversion")
-    parser = TYPE_PARSERS[to_type]
-    return parser(value)
-
-
-def _is_string_enum(type_: Type) -> bool:
-    origin_cls = get_origin(type_) or type_
-    return issubclass(origin_cls, str) and issubclass(origin_cls, Enum)
-
-
-def _to_bool(value: str) -> bool:
-    if value == "True":
-        return True
-    if value == "False":
-        return False
-    raise ValueError(f"Cannot convert {value} to boolean")
-
-
-TYPE_PARSERS: dict[type, Callable[[str], Any]] = {
-    bool: _to_bool,
-    str: str,
-    int: int,
-    float: float,
-    list[str]: lambda v: [item.strip().strip("'").strip('"') for item in v.strip("[]").split(",")],
-    list[int]: lambda v: [int(item.strip()) for item in v.strip("[]").split(",")],
-    list[float]: lambda v: [float(item.strip()) for item in v.strip("[]").split(",")],
-}
