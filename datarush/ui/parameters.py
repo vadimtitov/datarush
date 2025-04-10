@@ -98,7 +98,7 @@ def show_context_mocker() -> None:
 
     current_mock_params = st.session_state.context_params_mock
     mock_params = {
-        param.name: current_mock_params.get(param.name, "mock value")
+        param.name: current_mock_params.get(param.name, param.default or "mock value")
         for param in dataflow.parameters
     }
 
