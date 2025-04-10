@@ -16,6 +16,32 @@ if TYPE_CHECKING:
     from datarush.core.dataflow import Tableset
 
 
+def model_from_streamlit[T: BaseModel](
+    schema: Type[T],
+    tableset: Tableset | None = None,
+    key: str | int | None = None,
+    current_model: T | None = None,
+) -> T:
+    """
+    Render a streamlit form based on a Pydantic model and return the model instance.
+    Args:
+        schema : The Pydantic model class.
+        tableset: Optional tableset for table-related fields.
+        key: Optional key for Streamlit widgets.
+        current_model_dict: Optional current model dictionary to pre-fill values.
+    Returns:
+        T: The Pydantic model instance with the values from the Streamlit widgets.
+    """
+    model_dict = model_dict_from_streamlit(
+        schema=schema,
+        tableset=tableset,
+        key=key,
+        current_model_dict=current_model.model_dump() if current_model else None,
+        advanced_mode=False,
+    )
+    return schema.model_validate(model_dict)
+
+
 def model_dict_from_streamlit[T: BaseModel](
     schema: Type[T],
     tableset: Tableset | None = None,
@@ -34,7 +60,6 @@ def model_dict_from_streamlit[T: BaseModel](
     Returns:
         dict[str, Any]: The dictionary containing the values from the Streamlit widgets.
     """
-    template_context = {"bucket": "awesome", "object_key": "datasets/sample/test/data.csv"}
     model_dict = {}
 
     for name, field in schema.model_fields.items():
@@ -67,7 +92,7 @@ def model_dict_from_streamlit[T: BaseModel](
 
             # Try to render the template and display the result
             try:
-                rendered_value = render_jinja2_template(value, context=template_context)
+                rendered_value = render_jinja2_template(value, context=_get_context())
                 # validate by trying to convert
                 convert_to_type(rendered_value, to_type=field.annotation)
                 # Display the rendered value
@@ -174,3 +199,10 @@ def model_dict_from_streamlit[T: BaseModel](
         schema.model_validate(model_dict)
 
     return model_dict
+
+
+def _get_context() -> dict[str, Any]:
+    # TODO: this is kinda hacky (solves circular import problem)
+    from datarush.core.dataflow import get_dataflow
+
+    return get_dataflow().get_current_context()

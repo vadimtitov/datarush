@@ -1,5 +1,7 @@
 from enum import StrEnum
 
+from pydantic import BaseModel
+
 
 class ContentType(StrEnum):
 
@@ -13,6 +15,27 @@ class ContentType(StrEnum):
             ContentType.JSON: [".json"],
             ContentType.PARQUET: [".parquet"],
         }[self]
+
+
+class ParameterType(StrEnum):
+    """Input parameters types."""
+
+    STRING = "string"
+    INTEGER = "integer"
+    FLOAT = "float"
+    DATE = "date"
+    DATETIME = "datetime"
+    BOOLEAN = "boolean"
+
+
+class ParameterSpec(BaseModel):
+    """Parameter specification."""
+
+    name: str
+    type: ParameterType
+    description: str
+    default: str
+    required: bool
 
 
 class SpecialType(StrEnum):

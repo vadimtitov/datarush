@@ -8,6 +8,7 @@ import pandas as pd
 import streamlit as st
 from pydantic import BaseModel, ValidationError
 
+from datarush.core.types import ParameterSpec
 from datarush.exceptions import UnknownTableError
 from datarush.form import model_dict_from_streamlit
 from datarush.utils.jinja2 import model_validate_jinja2
@@ -185,9 +186,13 @@ class Dataflow:
 
     def __init__(
         self,
+        parameters: list[ParameterSpec] | None = None,
+        parameters_values: dict[str, Any] | None = None,
         operations: list[Operation] | None = None,
     ) -> None:
         self._current_tableset = Tableset([])
+        self._parameters = parameters or []
+        self._parameters_values = parameters_values or {}
         self._operations = operations or []
 
     @property
@@ -195,8 +200,26 @@ class Dataflow:
         return self._current_tableset
 
     @property
+    def parameters(self) -> list[ParameterSpec]:
+        return self._parameters
+
+    @property
     def operations(self) -> list[Operation]:
         return self._operations
+
+    def add_parameter(self, parameter: ParameterSpec) -> None:
+        self._parameters.append(parameter)
+
+    def remove_parameter(self, position: int) -> None:
+        if position < 0 or position >= len(self.parameters):
+            raise IndexError("position is out of range")
+        self._parameters.pop(position)
+
+    def set_parameter_value(self, name: str, value: Any) -> None:
+        # TODO: make some validation for value
+        if name not in [p.name for p in self.parameters]:
+            raise KeyError(f"Parameter {name} not found")
+        self._parameters_values[name] = value
 
     def add_operation(self, operation: Operation) -> None:
         self._operations.append(operation)
@@ -215,13 +238,21 @@ class Dataflow:
             raise IndexError("position is out of range")
         self._operations.pop(position)
 
+    def get_current_context(self) -> dict[str, Any]:
+        """
+        Get the current context for the dataflow.
+
+        Returns:
+            dict[str, Any]: The current context.
+        """
+        return {"parameters": self._parameters_values}
+
     def run(self) -> None:
         self._current_tableset = Tableset([])
         for operation in self.operations:
             if operation.is_enabled:
-                operation.update_template_context(
-                    {"bucket": "awesome", "object_key": "datasets/sample/test/data.csv"}
-                )
+                context = self.get_current_context()
+                operation.update_template_context(context)
                 self._current_tableset = operation.operate(self._current_tableset)
 
 

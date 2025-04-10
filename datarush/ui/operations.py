@@ -46,7 +46,11 @@ def show_operations() -> None:
     to_remove = []
 
     for i, op in enumerate(dataflow.operations):
-        op_summary = truncate(op.summary(), max_len=200)
+        # TODO: fix summary() for advanced mode
+        op_summary = (
+            truncate(op.summary(), max_len=200) if not op.advanced_mode else op.description
+        )
+
         with st.expander(op_summary if op.is_enabled else crossed_out(op_summary), expanded=False):
             if op.update_from_streamlit(dataflow.current_tableset, key=i):
                 st.rerun()
@@ -129,7 +133,7 @@ def show_add_operation_ui() -> None:
 
         if st.button("Add Operation"):
             if not new_operation:
-                st.error("Fill in rqeuired operation params")
+                st.error("Fill in required operation params")
                 return
 
             dataflow.add_operation(new_operation)

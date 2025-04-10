@@ -4,6 +4,7 @@ from io import BytesIO
 from datarush.config import TemplateStoreConfig
 from datarush.core.dataflow import Dataflow, Operation
 from datarush.core.operations import get_operation_type_by_name
+from datarush.core.types import ParameterSpec
 from datarush.utils.s3_client import S3Client
 
 _S3_FOLDER = "templates"
@@ -42,8 +43,9 @@ class TemplateManager:
 
 
 def template_to_dataflow(template: dict) -> Dataflow:
-    operations: list[Operation] = []
+    parameters = [ParameterSpec.model_validate(param) for param in template.get("parameters", [])]
 
+    operations: list[Operation] = []
     for operation in template["operations"]:
         operation_type = get_operation_type_by_name(operation["name"])
         operations.append(
@@ -53,10 +55,11 @@ def template_to_dataflow(template: dict) -> Dataflow:
             )
         )
 
-    return Dataflow(operations=operations)
+    return Dataflow(parameters=parameters, operations=operations)
 
 
 def dataflow_to_template(dataflow: Dataflow) -> dict:
+    paramaters = [param.model_dump() for param in dataflow.parameters]
     operations = [
         {
             "name": operation.name,
@@ -65,4 +68,5 @@ def dataflow_to_template(dataflow: Dataflow) -> dict:
         }
         for operation in dataflow.operations
     ]
-    return {"operations": operations}
+
+    return {"parameters": paramaters, "operations": operations}
