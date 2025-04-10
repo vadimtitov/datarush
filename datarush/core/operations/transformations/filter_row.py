@@ -1,11 +1,12 @@
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from datarush.core.dataflow import Operation, Tableset
+from datarush.core.types import BaseOperationModel, ColumnStr, TableStr
 
 
-class FilterRowModel(BaseModel):
-    table: str = Field(title="Table", description="Table to filter")
-    column: str = Field(title="Column", description="Column to filter by")
+class FilterRowModel(BaseOperationModel):
+    table: TableStr = Field(title="Table", description="Table to filter")
+    column: ColumnStr = Field(title="Column", description="Column to filter by")
     value: str = Field(title="Value", description="Value to filter for")
 
 

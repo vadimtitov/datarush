@@ -1,12 +1,13 @@
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from datarush.core.dataflow import Operation, Tableset
+from datarush.core.types import BaseOperationModel, ColumnStr, TableStr
 
 
-class SortColumnModel(BaseModel):
+class SortColumnModel(BaseOperationModel):
 
-    table: str = Field(title="Table", description="Table to sort")
-    column: str = Field(title="Column", description="Column to sort by", jinja=True)
+    table: TableStr = Field(title="Table", description="Table to sort")
+    column: ColumnStr = Field(title="Column", description="Column to sort by", jinja=True)
     ascending: bool = Field(
         title="Ascending",
         description="Sort in ascending order",

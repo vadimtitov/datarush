@@ -1,20 +1,20 @@
 from __future__ import annotations
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from datarush.core.dataflow import Operation, Tableset
-from datarush.core.types import ContentType
-from datarush.utils.misc import read_file, to_file
+from datarush.core.types import BaseOperationModel, ContentType, TableStr
+from datarush.utils.misc import to_file
 from datarush.utils.s3_client import S3Client
 
 
-class S3SinkModel(BaseModel):
+class S3SinkModel(BaseOperationModel):
     """S3 Sink model"""
 
     bucket: str = Field(title="Bucket")
     object_key: str = Field(title="Object Key")
     content_type: ContentType = Field(title="Content Type")
-    table: str = Field(title="Table to write")
+    table: TableStr = Field(title="Table to write")
 
 
 class S3ObjectSink(Operation):

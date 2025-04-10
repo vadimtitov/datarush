@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from datarush.core.dataflow import Operation, Tableset
+from datarush.core.types import BaseOperationModel, TableStr
 
 
-class DropnaModel(BaseModel):
-    table: str = Field(title="Table")
+class DropnaModel(BaseOperationModel):
+    table: TableStr = Field(title="Table")
 
 
 class DropNaValues(Operation):

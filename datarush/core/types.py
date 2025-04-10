@@ -1,6 +1,8 @@
 from enum import StrEnum
+from typing import Any
 
-from pydantic import BaseModel
+from pydantic import BaseModel, GetCoreSchemaHandler
+from pydantic_core import core_schema
 
 
 class ContentType(StrEnum):
@@ -38,12 +40,25 @@ class ParameterSpec(BaseModel):
     required: bool
 
 
-class SpecialType(StrEnum):
-    """Special type markers for the UI."""
+class TableStr(str):
+    """Special string type to mark field that take table name as an input."""
 
-    TABLE = "TABLES"
-    TABLE_LIST = "TABLE_LIST"
-    SELECTED_TABLE_COLUMN = "SELECTED_TABLE_COLUMN"
-    SELECTED_TABLE_COLUMN_LIST = "SELECTED_TABLE_COLUMN_LIST"
-    ALL_TABLES_COLUMN = "ALL_TABLES_COLUMN"
-    ALL_TABLES_COLUMN_LIST = "ALL_TABLES_COLUMN_LIST"
+    @classmethod
+    def __get_pydantic_core_schema__(cls, source_type: Any, handler: GetCoreSchemaHandler):
+        return core_schema.no_info_after_validator_function(
+            lambda v: TableStr(v), core_schema.str_schema()
+        )
+
+
+class ColumnStr(str):
+    """Special string type to mark field that take colum name as an input."""
+
+    @classmethod
+    def __get_pydantic_core_schema__(cls, source_type: Any, handler: GetCoreSchemaHandler):
+        return core_schema.no_info_after_validator_function(
+            lambda v: ColumnStr(v), core_schema.str_schema()
+        )
+
+
+class BaseOperationModel(BaseModel):
+    """Base model for operations."""

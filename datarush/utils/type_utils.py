@@ -3,6 +3,8 @@ from __future__ import annotations
 from enum import Enum
 from typing import Any, Callable, Type, get_args, get_origin
 
+from datarush.core.types import ColumnStr, TableStr
+
 
 def convert_to_type[T](value: str, to_type: type[T]) -> T:
     """
@@ -48,6 +50,8 @@ def _to_bool(value: str) -> bool:
 _TYPE_PARSERS: dict[type, Callable[[str], Any]] = {
     bool: _to_bool,
     str: str,
+    TableStr: str,
+    ColumnStr: str,
     int: int,
     float: float,
     list[str]: lambda v: [item.strip().strip("'").strip('"') for item in v.strip("[]").split(",")],

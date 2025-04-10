@@ -8,9 +8,9 @@ from pydantic import BaseModel
 from pydantic_core import PydanticUndefined
 from streamlit_ace import st_ace
 
-from datarush.core.types import ContentType
+from datarush.core.types import ColumnStr, ContentType, TableStr
 from datarush.utils.jinja2 import render_jinja2_template
-from datarush.utils.type_utils import convert_to_type, is_string_enum
+from datarush.utils.type_utils import convert_to_type, is_string_enum, types_are_equal
 
 if TYPE_CHECKING:
     from datarush.core.dataflow import Tableset
@@ -107,7 +107,7 @@ def model_dict_from_streamlit[T: BaseModel](
         ################################
         ############ UI MODE ###########
         ################################
-        elif name == "table":
+        elif field.annotation is TableStr:
             if tableset:
                 options = list(tableset)
                 index = options.index(current_value) if current_value is not None else 0
@@ -117,7 +117,7 @@ def model_dict_from_streamlit[T: BaseModel](
                     options=[current_value] if current_value is not None else [], **kwargs
                 )
 
-        elif name == "tables":
+        elif types_are_equal(field.annotation, list[TableStr]):
             if tableset:
                 options = list(tableset)
                 value = st.multiselect(options=options, default=current_value or None, **kwargs)
@@ -126,7 +126,7 @@ def model_dict_from_streamlit[T: BaseModel](
                     options=current_value or [], default=current_value, **kwargs
                 )
 
-        elif name in ("column", "columns"):
+        elif field.annotation is ColumnStr or types_are_equal(field.annotation, list[ColumnStr]):
             if tableset:
                 relevant_tables = []
                 table = model_dict.get("table")
@@ -140,7 +140,7 @@ def model_dict_from_streamlit[T: BaseModel](
                 relevant_columns = sorted(
                     {col for name in relevant_tables for col in tableset.get_df(name).columns}
                 )
-                if name == "column":
+                if field.annotation is ColumnStr:
                     index = (
                         relevant_columns.index(current_value) if current_value is not None else 0
                     )
@@ -150,7 +150,7 @@ def model_dict_from_streamlit[T: BaseModel](
                         options=relevant_columns, default=current_value, **kwargs
                     )
             else:
-                if name == "column":
+                if field.annotation is ColumnStr:
                     value = st.selectbox(
                         options=[current_value] if current_value is not None else [], **kwargs
                     )
