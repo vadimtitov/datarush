@@ -28,6 +28,6 @@ class S3ObjectSource(Operation):
 
     def operate(self, tableset: Tableset) -> Tableset:
         obj = S3Client().get_object(self.model.bucket, self.model.object_key)
-        df = read_file(obj["Body"], self.model.content_type)
+        df = read_file(obj, self.model.content_type)
         tableset.set_df(self.model.table_name, df)
         return tableset
