@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import date, datetime
 from enum import Enum
 from typing import Any, Callable, Type, get_args, get_origin
 
@@ -54,6 +55,8 @@ _TYPE_PARSERS: dict[type, Callable[[str], Any]] = {
     ColumnStr: str,
     int: int,
     float: float,
+    date: lambda v: datetime.fromisoformat(v).date(),
+    datetime: datetime.fromisoformat,
     list[str]: lambda v: [item.strip().strip("'").strip('"') for item in v.strip("[]").split(",")],
     list[int]: lambda v: [int(item.strip()) for item in v.strip("[]").split(",")],
     list[float]: lambda v: [float(item.strip()) for item in v.strip("[]").split(",")],

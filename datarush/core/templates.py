@@ -1,5 +1,6 @@
 import json
 from io import BytesIO
+from typing import Any, TypedDict
 
 from datarush.config import TemplateStoreConfig
 from datarush.core.dataflow import Dataflow, Operation
@@ -9,6 +10,20 @@ from datarush.utils.s3_client import S3Client
 
 _S3_FOLDER = "templates"
 _TEMPLATE_FILE = "template.json"
+
+
+ParameterDict = TypedDict("ParameterDict", ParameterSpec.__annotations__)
+
+
+class OperationDict(TypedDict):
+    name: str
+    data: dict[str, Any]
+    advanced_mode: bool
+
+
+class TemplateDict(TypedDict):
+    parameters: list[ParameterDict]
+    operations: list[dict]
 
 
 class TemplateManager:
@@ -28,12 +43,12 @@ class TemplateManager:
         )
         return [v.replace("version=", "") for v in raw_versions if v.startswith("version=")]
 
-    def read_template(self, template_name: str, version: str) -> dict:
+    def read_template(self, template_name: str, version: str) -> TemplateDict:
         key = f"{self._prefix}/{_S3_FOLDER}/{template_name}/version={version}/{_TEMPLATE_FILE}"
         obj = self._s3.get_object(self._bucket, key)
         return json.load(obj)
 
-    def write_template(self, template: dict, template_name: str, version: str) -> None:
+    def write_template(self, template: TemplateDict, template_name: str, version: str) -> None:
         key = f"{self._prefix}/{_S3_FOLDER}/{template_name}/version={version}/{_TEMPLATE_FILE}"
         if self._s3.list_object_keys(self._bucket, key):
             raise ValueError(f"Template version {version} already exists")
@@ -42,7 +57,7 @@ class TemplateManager:
         self._s3.put_object(self._bucket, key, buffer)
 
 
-def template_to_dataflow(template: dict) -> Dataflow:
+def template_to_dataflow(template: TemplateDict) -> Dataflow:
     parameters = [ParameterSpec.model_validate(param) for param in template.get("parameters", [])]
 
     operations: list[Operation] = []
@@ -58,7 +73,7 @@ def template_to_dataflow(template: dict) -> Dataflow:
     return Dataflow(parameters=parameters, operations=operations)
 
 
-def dataflow_to_template(dataflow: Dataflow) -> dict:
+def dataflow_to_template(dataflow: Dataflow) -> TemplateDict:
     paramaters = [param.model_dump() for param in dataflow.parameters]
     operations = [
         {

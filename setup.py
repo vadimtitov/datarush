@@ -12,9 +12,9 @@ setup(
     packages=find_packages(),
     install_requires=[
         "pandas>=1.3.0",
-        "pydantic>=1.8.2",
+        "pydantic>=2",
         "streamlit",
-        "boto3",
+        "boto3>=1.37.4,<2",
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
@@ -22,4 +22,9 @@ setup(
         "Operating System :: OS Independent",
     ],
     python_requires=">=3.12",
+    entry_points={
+        "console_scripts": [
+            "datarush = datarush.runner:run_template_from_command_line",
+        ],
+    },
 )

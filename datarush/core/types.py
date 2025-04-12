@@ -1,5 +1,6 @@
+from datetime import date, datetime
 from enum import StrEnum
-from typing import Any
+from typing import Any, Type
 
 from pydantic import BaseModel, GetCoreSchemaHandler
 from pydantic_core import core_schema
@@ -28,6 +29,17 @@ class ParameterType(StrEnum):
     DATE = "date"
     DATETIME = "datetime"
     BOOLEAN = "boolean"
+
+    def get_type(self) -> Type:
+        """Get the corresponding Python type for the parameter type."""
+        return {
+            ParameterType.STRING: str,
+            ParameterType.INTEGER: int,
+            ParameterType.FLOAT: float,
+            ParameterType.DATE: date,
+            ParameterType.DATETIME: datetime,
+            ParameterType.BOOLEAN: bool,
+        }[self]
 
 
 class ParameterSpec(BaseModel):

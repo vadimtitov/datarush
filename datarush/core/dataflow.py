@@ -187,12 +187,11 @@ class Dataflow:
     def __init__(
         self,
         parameters: list[ParameterSpec] | None = None,
-        parameters_values: dict[str, Any] | None = None,
         operations: list[Operation] | None = None,
     ) -> None:
         self._current_tableset = Tableset([])
         self._parameters = parameters or []
-        self._parameters_values = parameters_values or {}
+        self._parameters_values = {}
         self._operations = operations or []
 
     @property
@@ -220,6 +219,10 @@ class Dataflow:
         if name not in [p.name for p in self.parameters]:
             raise KeyError(f"Parameter {name} not found")
         self._parameters_values[name] = value
+
+    def set_parameters_values(self, values: dict[str, Any]) -> None:
+        for name, value in values.items():
+            self.set_parameter_value(name, value)
 
     def add_operation(self, operation: Operation) -> None:
         self._operations.append(operation)
