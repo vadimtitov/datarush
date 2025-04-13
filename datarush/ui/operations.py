@@ -1,8 +1,8 @@
 import streamlit as st
 
-from datarush.core.dataflow import get_dataflow
 from datarush.core.operations import OPERATION_TYPES, get_operation_type_by_title
 from datarush.ui.form import operation_from_streamlit, update_operation_from_streamlit
+from datarush.ui.state import get_dataflow
 from datarush.utils.misc import crossed_out, truncate
 
 

@@ -3,8 +3,8 @@ import json
 import streamlit as st
 from streamlit_ace import THEMES, st_ace
 
-from datarush.core.dataflow import get_dataflow
 from datarush.core.templates import dataflow_to_template
+from datarush.ui.state import get_dataflow
 
 
 def save_page():

@@ -5,7 +5,6 @@ from abc import ABC, abstractmethod
 from typing import Any, Iterator, Type, TypeVar, get_type_hints
 
 import pandas as pd
-import streamlit as st
 from pydantic import BaseModel
 
 from datarush.core.types import ParameterSpec
@@ -223,16 +222,6 @@ class Dataflow:
                 context = self.get_current_context()
                 operation.update_template_context(context)
                 self._current_tableset = operation.operate(self._current_tableset)
-
-
-def get_dataflow() -> Dataflow:
-    if "dataflow" not in st.session_state:
-        st.session_state["dataflow"] = Dataflow()
-    return st.session_state["dataflow"]
-
-
-def set_dataflow(dataflow: Dataflow) -> None:
-    st.session_state["dataflow"] = dataflow
 
 
 _TModel = TypeVar("_TModel", bound=BaseModel)

@@ -4,9 +4,9 @@ import streamlit as st
 from pydantic import ValidationError
 from streamlit_ace import st_ace
 
-from datarush.core.dataflow import get_dataflow
 from datarush.core.types import ParameterSpec
 from datarush.ui.form import model_from_streamlit
+from datarush.ui.state import get_dataflow
 
 
 def parameters_page():

@@ -1,0 +1,19 @@
+import streamlit as st
+
+from datarush.core.dataflow import Dataflow
+
+
+def get_dataflow() -> Dataflow:
+    """
+    Get the dataflow object from the session state, creating it if it doesn't exist.
+    """
+    if "dataflow" not in st.session_state:
+        set_dataflow(Dataflow())
+    return st.session_state["dataflow"]
+
+
+def set_dataflow(dataflow: Dataflow) -> None:
+    """
+    Set the dataflow object in the session state.
+    """
+    st.session_state["dataflow"] = dataflow

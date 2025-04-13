@@ -1,12 +1,12 @@
 import streamlit as st
 
-from datarush.core.dataflow import get_dataflow, set_dataflow
 from datarush.core.templates import (
     TemplateManager,
     dataflow_to_template,
     get_template_manager,
     template_to_dataflow,
 )
+from datarush.ui.state import get_dataflow, set_dataflow
 
 OPTION_CREATE_NEW_TEMPLATE = "- Create New Template -"
 

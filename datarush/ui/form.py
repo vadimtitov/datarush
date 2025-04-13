@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Type
+from typing import Any, Type
 
 import jinja2
 import streamlit as st
@@ -8,12 +8,11 @@ from pydantic import BaseModel, ValidationError
 from pydantic_core import PydanticUndefined
 from streamlit_ace import st_ace
 
+from datarush.core.dataflow import Operation, Tableset
 from datarush.core.types import ColumnStr, ContentType, TableStr
+from datarush.ui.state import get_dataflow
 from datarush.utils.jinja2 import render_jinja2_template
 from datarush.utils.type_utils import convert_to_type, is_string_enum, types_are_equal
-
-if TYPE_CHECKING:
-    from datarush.core.dataflow import Operation, Tableset
 
 
 def operation_from_streamlit[T: Operation](
@@ -132,7 +131,8 @@ def model_dict_from_streamlit[T: BaseModel](
 
             # Try to render the template and display the result
             try:
-                rendered_value = render_jinja2_template(value, context=_get_context())
+                dataflow_context = get_dataflow().get_current_context()
+                rendered_value = render_jinja2_template(value, context=dataflow_context)
                 # validate by trying to convert
                 convert_to_type(rendered_value, to_type=field.annotation)
                 # Display the rendered value
@@ -239,10 +239,3 @@ def model_dict_from_streamlit[T: BaseModel](
         schema.model_validate(model_dict)
 
     return model_dict
-
-
-def _get_context() -> dict[str, Any]:
-    # TODO: this is kinda hacky (solves circular import problem)
-    from datarush.core.dataflow import get_dataflow
-
-    return get_dataflow().get_current_context()
