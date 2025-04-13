@@ -115,7 +115,7 @@ def model_dict_from_streamlit[T: BaseModel](
         ################################
         if advanced_mode:
             # Display the editor for jinja2 template
-            st.write(f"{kwargs["label"]} template")
+            st.write(f"{kwargs['label']} template")
             value = st_ace(
                 str(current_value),
                 language="django",
@@ -136,7 +136,7 @@ def model_dict_from_streamlit[T: BaseModel](
                 # validate by trying to convert
                 convert_to_type(rendered_value, to_type=field.annotation)
                 # Display the rendered value
-                st.write(f"{kwargs["label"]} value")
+                st.write(f"{kwargs['label']} value")
                 st.code(rendered_value)
                 st.write("___")
             except jinja2.exceptions.TemplateSyntaxError as e:
