@@ -5,35 +5,52 @@ from datarush.core.operations.sinks import s3_sink
 from datarush.core.operations.sources import http_source, local_file_source, s3_object_source
 from datarush.core.operations.transformations import dropna, filter_row, select_columns, sort
 
-DATA_SOURCE_OPERATION_TYPES: list[Type[Operation]] = [
-    http_source.HttpSource,
-    local_file_source.LocalFileSource,
-    s3_object_source.S3ObjectSource,
-]
 
-TRANSFORM_OPERATION_TYPES: list[Type[Operation]] = [
-    dropna.DropNaValues,
-    sort.SortByColumn,
-    filter_row.FilterByColumn,
-    select_columns.SelectColumns,
-]
+def register_operation_type(operation: Type[Operation]) -> None:
+    """
+    Register a new operation type
+    """
+    _TITLE_TO_OPERATION_TYPE[operation.title] = operation
+    _NAME_TO_OPERATION_TYPE[operation.name] = operation
 
-DATA_SINK_OPERATION_TYPES: list[Type[Operation]] = [
-    s3_sink.S3ObjectSink,
-]
 
-OPERATION_TYPES = (
-    DATA_SOURCE_OPERATION_TYPES + TRANSFORM_OPERATION_TYPES + DATA_SINK_OPERATION_TYPES
-)
+def list_operation_types() -> list[Type[Operation]]:
+    """
+    List all available operation type
+    """
+    return list(_NAME_TO_OPERATION_TYPE.values())
 
 
 def get_operation_type_by_title(title: str) -> Type[Operation]:
+    """
+    Get operation type by operation title
+    """
     return _TITLE_TO_OPERATION_TYPE[title]
 
 
 def get_operation_type_by_name(name: str) -> Type[Operation]:
+    """
+    Get operation type by operation name
+    """
     return _NAME_TO_OPERATION_TYPE[name]
 
 
-_TITLE_TO_OPERATION_TYPE = {op.title: op for op in OPERATION_TYPES}
-_NAME_TO_OPERATION_TYPE = {op.name: op for op in OPERATION_TYPES}
+_TITLE_TO_OPERATION_TYPE: dict[str, Type[Operation]] = {}
+_NAME_TO_OPERATION_TYPE: dict[str, Type[Operation]] = {}
+
+
+# Register build-in operations
+for _op_type in [
+    # Source
+    http_source.HttpSource,
+    local_file_source.LocalFileSource,
+    s3_object_source.S3ObjectSource,
+    # Transform
+    dropna.DropNaValues,
+    sort.SortByColumn,
+    filter_row.FilterByColumn,
+    select_columns.SelectColumns,
+    # Sink
+    s3_sink.S3ObjectSink,
+]:
+    register_operation_type(_op_type)

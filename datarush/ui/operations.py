@@ -1,6 +1,6 @@
 import streamlit as st
 
-from datarush.core.operations import OPERATION_TYPES, get_operation_type_by_title
+from datarush.core.operations import get_operation_type_by_title, list_operation_types
 from datarush.ui.form import operation_from_streamlit, update_operation_from_streamlit
 from datarush.ui.state import get_dataflow
 from datarush.utils.misc import crossed_out, truncate
@@ -120,7 +120,7 @@ def show_add_operation_ui() -> None:
     dataflow = get_dataflow()
     with st.expander("Add New Operation", expanded=False):
         selected_op_title = st.selectbox(
-            "Choose an operation to add", [cls.title for cls in OPERATION_TYPES]
+            "Choose an operation to add", [op_type.title for op_type in list_operation_types()]
         )
         if not selected_op_title:
             return
