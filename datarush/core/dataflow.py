@@ -6,11 +6,10 @@ from typing import Any, Iterator, Type, TypeVar, get_type_hints
 
 import pandas as pd
 import streamlit as st
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel
 
 from datarush.core.types import ParameterSpec
 from datarush.exceptions import UnknownTableError
-from datarush.form import model_dict_from_streamlit
 from datarush.utils.jinja2 import model_validate_jinja2
 
 LOG = logging.getLogger(__name__)
@@ -109,39 +108,6 @@ class Operation(ABC):
             context (dict[str, Any]): The new context to use.
         """
         self._template_context = context
-
-    @classmethod
-    def from_streamlit(
-        cls, tableset: Tableset | None = None, key: int | str | None = None
-    ) -> Operation | None:
-        try:
-            model_dict = model_dict_from_streamlit(
-                cls.schema(),
-                tableset=tableset,
-                key=key,
-            )
-            return cls(model_dict)
-        except ValidationError as e:
-            return None
-
-    def update_from_streamlit(
-        self, tableset: Tableset | None = None, key: int | str | None = None
-    ) -> bool:
-        model_dict = model_dict_from_streamlit(
-            self.schema(),
-            tableset=tableset,
-            key=key,
-            current_model_dict=self.model_dict,
-            advanced_mode=self.advanced_mode,
-        )
-        if self.model_dict == model_dict:
-            return False
-
-        if st.button("Update", f"operation_update_button_{key}"):
-            self._model_dict = model_dict
-            return True
-
-        return False
 
     @property
     @abstractmethod

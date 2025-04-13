@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, Type
 
 import jinja2
 import streamlit as st
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 from pydantic_core import PydanticUndefined
 from streamlit_ace import st_ace
 
@@ -13,7 +13,47 @@ from datarush.utils.jinja2 import render_jinja2_template
 from datarush.utils.type_utils import convert_to_type, is_string_enum, types_are_equal
 
 if TYPE_CHECKING:
-    from datarush.core.dataflow import Tableset
+    from datarush.core.dataflow import Operation, Tableset
+
+
+def operation_from_streamlit[T: Operation](
+    operation_type: Type[T], tableset: Tableset | None = None, key: int | str | None = None
+) -> T | None:
+    """
+    Render a streamlit form for a given operation type and return the operation instance.
+    """
+    try:
+        model_dict = model_dict_from_streamlit(
+            operation_type.schema(),
+            tableset=tableset,
+            key=key,
+        )
+        return operation_type(model_dict)
+    except ValidationError as e:
+        return None
+
+
+def update_operation_from_streamlit(
+    operation: Operation, tableset: Tableset | None = None, key: int | str | None = None
+) -> bool:
+    """
+    Update the operation instance from a streamlit form.
+    """
+    model_dict = model_dict_from_streamlit(
+        operation.schema(),
+        tableset=tableset,
+        key=key,
+        current_model_dict=operation.model_dict,
+        advanced_mode=operation.advanced_mode,
+    )
+    if operation.model_dict == model_dict:
+        return False
+
+    if st.button("Update", f"operation_update_button_{key}"):
+        operation._model_dict = model_dict
+        return True
+
+    return False
 
 
 def model_from_streamlit[T: BaseModel](

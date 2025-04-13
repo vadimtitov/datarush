@@ -2,6 +2,7 @@ import streamlit as st
 
 from datarush.core.dataflow import get_dataflow
 from datarush.core.operations import OPERATION_TYPES, get_operation_type_by_title
+from datarush.ui.form import operation_from_streamlit, update_operation_from_streamlit
 from datarush.utils.misc import crossed_out, truncate
 
 
@@ -52,7 +53,7 @@ def show_operations() -> None:
         )
 
         with st.expander(op_summary if op.is_enabled else crossed_out(op_summary), expanded=False):
-            if op.update_from_streamlit(dataflow.current_tableset, key=i):
+            if update_operation_from_streamlit(op, tableset=dataflow.current_tableset, key=i):
                 st.rerun()
 
             #
@@ -124,11 +125,13 @@ def show_add_operation_ui() -> None:
         if not selected_op_title:
             return
 
-        operation_class = get_operation_type_by_title(selected_op_title)
+        operation_type = get_operation_type_by_title(selected_op_title)
         operation_future_index = len(dataflow.operations)
 
-        new_operation = operation_class.from_streamlit(
-            tableset=dataflow.current_tableset, key=operation_future_index
+        new_operation = operation_from_streamlit(
+            operation_type=operation_type,
+            tableset=dataflow.current_tableset,
+            key=operation_future_index,
         )
 
         if st.button("Add Operation"):

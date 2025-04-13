@@ -1,14 +1,12 @@
 import json
 
-import jinja2
 import streamlit as st
 from pydantic import ValidationError
 from streamlit_ace import st_ace
 
 from datarush.core.dataflow import get_dataflow
 from datarush.core.types import ParameterSpec
-from datarush.form import model_from_streamlit
-from datarush.utils.jinja2 import render_jinja2_template
+from datarush.ui.form import model_from_streamlit
 
 
 def parameters_page():
