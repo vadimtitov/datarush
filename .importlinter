@@ -1,0 +1,15 @@
+[importlinter]
+root_package = datarush
+
+[contract: no-import-ui-in-core]
+name = Core must not import UI
+type = forbidden
+source = datarush.core
+forbidden = datarush.ui
+
+[contract: no-streamlit-in-core]
+name = Core must not import streamlit
+type = forbidden
+source = datarush.core
+forbidden = streamlit
+
