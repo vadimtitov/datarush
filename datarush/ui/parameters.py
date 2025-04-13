@@ -72,9 +72,10 @@ def show_add_parameter_ui() -> None:
     dataflow = get_dataflow()
     with st.expander("Add New Parameter", expanded=False):
         try:
+            parameter_future_index = len(dataflow.parameters)
             param = model_from_streamlit(
                 ParameterSpec,
-                key=f"parameter_{len(dataflow.parameters)}",
+                key=f"parameter_{parameter_future_index}",
             )
         except ValidationError as e:
             param = None
