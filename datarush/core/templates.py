@@ -170,8 +170,6 @@ def get_template_manager() -> TemplateManager:
     """
     config = TemplateStoreConfig.fromenv()
 
-    print(config.s3)
-
     if config.store_type == TemplateStoreType.FILESYSTEM:
         return FilesystemTemplateManager(config.filesystem)
     elif config.store_type == TemplateStoreType.S3:
