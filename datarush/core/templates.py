@@ -1,14 +1,22 @@
+import abc
 import json
+import os
+from functools import cache
 from io import BytesIO
 from typing import Any, TypedDict
 
-from datarush.config import TemplateStoreConfig
+from datarush.config import (
+    FilesystemTemplateStoreConfig,
+    S3TemplateStoreConfig,
+    TemplateStoreConfig,
+    TemplateStoreType,
+)
 from datarush.core.dataflow import Dataflow, Operation
 from datarush.core.operations import get_operation_type_by_name
 from datarush.core.types import ParameterSpec
 from datarush.utils.s3_client import S3Client
 
-_S3_FOLDER = "templates"
+_TEMPLATES_FOLDER = "templates"
 _TEMPLATE_FILE = "template.json"
 
 
@@ -16,40 +24,81 @@ ParameterDict = TypedDict("ParameterDict", ParameterSpec.__annotations__)
 
 
 class OperationDict(TypedDict):
+    """Operation dictionary for the template store."""
+
     name: str
     data: dict[str, Any]
     advanced_mode: bool
 
 
 class TemplateDict(TypedDict):
+    """Template dictionary for the template store."""
+
     parameters: list[ParameterDict]
     operations: list[dict]
 
 
-class TemplateManager:
+class TemplateManager(abc.ABC):
 
-    def __init__(self, config: TemplateStoreConfig | None = None):
-        config = config or TemplateStoreConfig.fromenv()
+    @abc.abstractmethod
+    def list_templates(self) -> list[str]:
+        """
+        List all templates in the template store.
+        """
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def list_template_versions(self, template_name: str) -> list[str]:
+        """
+        List all versions of a template in the template store.
+        """
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def read_template(self, template_name: str, version: str) -> TemplateDict:
+        """
+        Read a template from the template store.
+        """
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def write_template(self, template: TemplateDict, template_name: str, version: str) -> None:
+        """
+        Write a template to the template store.
+        """
+        raise NotImplementedError
+
+
+class S3TemplateManager(TemplateManager):
+    """S3 based template manager."""
+
+    def __init__(self, config: S3TemplateStoreConfig | None = None):
+        """Init."""
+        config = config or S3TemplateStoreConfig.fromenv()
         self._s3 = S3Client()
-        self._bucket = config.s3_bucket
-        self._prefix = config.s3_prefix
+        self._bucket = config.bucket
+        self._prefix = config.prefix
 
     def list_templates(self) -> list[str]:
-        return self._s3.list_folders(self._bucket, f"{self._prefix}/{_S3_FOLDER}")
+        """List all templates in the s3 template store."""
+        return self._s3.list_folders(self._bucket, f"{self._prefix}/{_TEMPLATES_FOLDER}")
 
     def list_template_versions(self, template_name: str) -> list[str]:
+        """List all versions of a template in the s3 template store."""
         raw_versions = self._s3.list_folders(
-            self._bucket, f"{self._prefix}/{_S3_FOLDER}/{template_name}"
+            self._bucket, f"{self._prefix}/{_TEMPLATES_FOLDER}/{template_name}"
         )
         return [v.replace("version=", "") for v in raw_versions if v.startswith("version=")]
 
     def read_template(self, template_name: str, version: str) -> TemplateDict:
-        key = f"{self._prefix}/{_S3_FOLDER}/{template_name}/version={version}/{_TEMPLATE_FILE}"
+        """Read a template from the s3 template store."""
+        key = f"{self._prefix}/{_TEMPLATES_FOLDER}/{template_name}/version={version}/{_TEMPLATE_FILE}"
         obj = self._s3.get_object(self._bucket, key)
         return json.load(obj)
 
     def write_template(self, template: TemplateDict, template_name: str, version: str) -> None:
-        key = f"{self._prefix}/{_S3_FOLDER}/{template_name}/version={version}/{_TEMPLATE_FILE}"
+        """Write a template to the s3 template store."""
+        key = f"{self._prefix}/{_TEMPLATES_FOLDER}/{template_name}/version={version}/{_TEMPLATE_FILE}"
         if self._s3.list_object_keys(self._bucket, key):
             raise ValueError(f"Template version {version} already exists")
 
@@ -57,7 +106,84 @@ class TemplateManager:
         self._s3.put_object(self._bucket, key, buffer)
 
 
+class FilesystemTemplateManager(TemplateManager):
+    """File system based template manager."""
+
+    def __init__(self, config: FilesystemTemplateStoreConfig | None = None):
+        """Init."""
+        config = config or FilesystemTemplateStoreConfig.fromenv()
+        self._path = config.path
+
+    def list_templates(self) -> list[str]:
+        """List all templates in the template store."""
+        templates_path = f"{self._path}/{_TEMPLATES_FOLDER}"
+
+        if not os.path.exists(templates_path):
+            os.makedirs(templates_path, exist_ok=True)
+            return []
+
+        return [
+            folder
+            for folder in os.listdir(templates_path)
+            if os.path.isdir(os.path.join(templates_path, folder))
+        ]
+
+    def list_template_versions(self, template_name: str) -> list[str]:
+        """List all versions of a template in the template store."""
+        template_path = f"{self._path}/{_TEMPLATES_FOLDER}/{template_name}"
+
+        if not os.path.exists(template_path):
+            os.makedirs(template_path, exist_ok=True)
+            return []
+
+        return [
+            folder.replace("version=", "")
+            for folder in os.listdir(template_path)
+            if os.path.isdir(os.path.join(template_path, folder))
+        ]
+
+    def read_template(self, template_name: str, version: str) -> TemplateDict:
+        """Read a template from the file system."""
+        template_path = (
+            f"{self._path}/{_TEMPLATES_FOLDER}/{template_name}/version={version}/{_TEMPLATE_FILE}"
+        )
+        with open(template_path, "r") as f:
+            return json.load(f)
+
+    def write_template(self, template: TemplateDict, template_name: str, version: str) -> None:
+        """Write a template to the file system."""
+        template_path = f"{self._path}/{_TEMPLATES_FOLDER}/{template_name}/version={version}"
+        os.makedirs(template_path, exist_ok=True)
+
+        # check if the template already exists
+        if os.path.exists(f"{template_path}/{_TEMPLATE_FILE}"):
+            raise ValueError(f"Template version {version} already exists")
+
+        with open(f"{template_path}/{_TEMPLATE_FILE}", "w") as f:
+            json.dump(template, f, indent=4)
+
+
+@cache
+def get_template_manager() -> TemplateManager:
+    """
+    Get the template manager.
+    """
+    config = TemplateStoreConfig.fromenv()
+
+    print(config.s3)
+
+    if config.store_type == TemplateStoreType.FILESYSTEM:
+        return FilesystemTemplateManager(config.filesystem)
+    elif config.store_type == TemplateStoreType.S3:
+        return S3TemplateManager(config.s3)
+    else:
+        raise ValueError(f"Unknown template store type: {config.store_type}")
+
+
 def template_to_dataflow(template: TemplateDict) -> Dataflow:
+    """
+    Convert a template to a dataflow.
+    """
     parameters = [ParameterSpec.model_validate(param) for param in template.get("parameters", [])]
 
     operations: list[Operation] = []
@@ -74,6 +200,9 @@ def template_to_dataflow(template: TemplateDict) -> Dataflow:
 
 
 def dataflow_to_template(dataflow: Dataflow) -> TemplateDict:
+    """
+    Convert a dataflow to a template.
+    """
     paramaters = [param.model_dump() for param in dataflow.parameters]
     operations = [
         {

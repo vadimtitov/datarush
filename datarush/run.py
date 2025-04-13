@@ -1,8 +1,7 @@
 import argparse
 from typing import Any
 
-from datarush.core.dataflow import Dataflow
-from datarush.core.templates import TemplateManager, template_to_dataflow
+from datarush.core.templates import get_template_manager, template_to_dataflow
 from datarush.core.types import ParameterSpec
 from datarush.utils.type_utils import convert_to_type
 
@@ -11,7 +10,7 @@ def run_template(name: str, version: str, parameters: dict[str, Any] | None = No
     """
     Run a template by its name and version.
     """
-    template = TemplateManager().read_template(name, version)
+    template = get_template_manager().read_template(name, version)
     dataflow = template_to_dataflow(template)
     if parameters:
         parameter_values = _parse_parameter_values_from_specs(
@@ -36,7 +35,7 @@ def run_template_from_command_line() -> None:
 
     args, _ = argparser.parse_known_args()
 
-    template = TemplateManager().read_template(args.template, args.version)
+    template = get_template_manager().read_template(args.template, args.version)
     dataflow = template_to_dataflow(template)
 
     for param in dataflow.parameters:

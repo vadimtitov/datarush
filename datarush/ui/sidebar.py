@@ -1,7 +1,12 @@
 import streamlit as st
 
 from datarush.core.dataflow import get_dataflow, set_dataflow
-from datarush.core.templates import TemplateManager, dataflow_to_template, template_to_dataflow
+from datarush.core.templates import (
+    TemplateManager,
+    dataflow_to_template,
+    get_template_manager,
+    template_to_dataflow,
+)
 
 OPTION_CREATE_NEW_TEMPLATE = "- Create New Template -"
 
@@ -75,7 +80,7 @@ def sidebar_section(pages: list[st.Page]) -> None:
 
 @st.cache_resource
 def _get_template_manager() -> TemplateManager:
-    return TemplateManager()
+    return get_template_manager()
 
 
 def _get_query_param(param: str) -> str | None:
