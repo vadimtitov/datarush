@@ -48,8 +48,6 @@ def show_operations() -> None:
     st.subheader("Operations")
     dataflow = get_dataflow()
 
-    to_remove = []
-
     for i, op in enumerate(dataflow.operations):
         # TODO: fix summary() for advanced mode
         op_summary = (
@@ -62,31 +60,31 @@ def show_operations() -> None:
 
             cols = st.columns([8, 1, 1, 1, 1, 1])
 
-            if (
-                cols[1].button(
-                    "",
-                    key=f"manmode_{i}",
-                    help=(
-                        "Switch to UI input mode"
-                        if op.advanced_mode
-                        else "Switch to advanced input mode"
-                    ),
-                    icon=":material/view_list:" if op.advanced_mode else ":material/data_object:",
-                )
+            if cols[1].button(
+                "",
+                key=f"manmode_{i}",
+                help=(
+                    "Switch to UI input mode"
+                    if op.advanced_mode
+                    else "Switch to advanced input mode"
+                ),
+                icon=":material/view_list:" if op.advanced_mode else ":material/data_object:",
             ):
                 op.advanced_mode = not op.advanced_mode
                 st.rerun()
 
-            if i > 0 and (
-                cols[2].button("", key=f"up_{i}", help="Move up", icon=":material/arrow_upward:")
+            if cols[2].button(
+                "", key=f"up_{i}", help="Move up", icon=":material/arrow_upward:", disabled=i == 0
             ):
                 dataflow.move_operation(i, i - 1)
                 st.rerun()
 
-            if i < len(dataflow.operations) - 1 and (
-                cols[3].button(
-                    "", key=f"down_{i}", help="Move down", icon=":material/arrow_downward:"
-                )
+            if cols[3].button(
+                "",
+                key=f"down_{i}",
+                help="Move down",
+                icon=":material/arrow_downward:",
+                disabled=i == len(dataflow.operations) - 1,
             ):
                 dataflow.move_operation(i, i + 1)
                 st.rerun()
@@ -101,11 +99,8 @@ def show_operations() -> None:
                 st.rerun()
 
             if cols[5].button("", key=f"remove_{i}", help="Remove", icon=":material/close:"):
-                to_remove.append(i)
-
-    for index in reversed(to_remove):
-        dataflow.remove_operation(index)
-        st.rerun()
+                dataflow.remove_operation(i)
+                st.rerun()
 
 
 def show_add_operation_ui() -> None:
