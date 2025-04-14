@@ -1,3 +1,5 @@
+"""Functions for executing DataRush templates."""
+
 import argparse
 from typing import Any
 
@@ -7,9 +9,7 @@ from datarush.utils.type_utils import convert_to_type
 
 
 def run_template(name: str, version: str, parameters: dict[str, Any] | None = None) -> None:
-    """
-    Run a template by its name and version.
-    """
+    """Run a template by its name and version."""
     template = get_template_manager().read_template(name, version)
     dataflow = template_to_dataflow(template)
     if parameters:
@@ -21,9 +21,7 @@ def run_template(name: str, version: str, parameters: dict[str, Any] | None = No
 
 
 def run_template_from_command_line() -> None:
-    """
-    Run a template from the command line.
-    """
+    """Run a template using command-line arguments."""
     argparser = argparse.ArgumentParser(description="Datarush Template Runner")
 
     argparser.add_argument(
@@ -57,9 +55,7 @@ def run_template_from_command_line() -> None:
 def _parse_parameter_values_from_specs(
     parameter_specs: list[ParameterSpec], parameter_values: dict[str, str]
 ) -> dict[str, Any]:
-    """
-    Parse parameters from the command line arguments.
-    """
+    """Convert parameter values to their specified types."""
     for spec in parameter_specs:
         if spec.name not in parameter_values and spec.required:
             raise ValueError(f"Parameter {spec.name} not found in the provided values")

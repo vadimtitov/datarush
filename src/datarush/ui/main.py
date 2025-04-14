@@ -1,3 +1,5 @@
+"""Main streamlit entrypoint."""
+
 import streamlit as st
 
 from datarush.config import AppConfig
@@ -5,7 +7,7 @@ from datarush.ui import operations, parameters, save, sidebar
 
 
 def main():
-    """Main function for DataRush UI."""
+    """Run DataRush UI."""
     st.set_page_config(layout="wide")
 
     pages = [

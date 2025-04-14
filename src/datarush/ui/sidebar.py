@@ -1,3 +1,5 @@
+"""Sidebar section for template selection, creation, and page navigation."""
+
 import streamlit as st
 
 from datarush.core.templates import (
@@ -12,6 +14,7 @@ OPTION_CREATE_NEW_TEMPLATE = "- Create New Template -"
 
 
 def sidebar_section(pages: list[st.Page]) -> None:
+    """Render the sidebar with template and page controls."""
     st.sidebar.title("DataRush Template")
     st.sidebar.divider()
     template_manager = _get_template_manager()
@@ -80,10 +83,12 @@ def sidebar_section(pages: list[st.Page]) -> None:
 
 @st.cache_resource
 def _get_template_manager() -> TemplateManager:
+    """Get the cached template manager instance."""
     return get_template_manager()
 
 
 def _get_query_param(param: str) -> str | None:
+    """Retrieve a query parameter from the URL or session state."""
     value = st.query_params.get(param)
 
     if "query_params" not in st.session_state:
@@ -103,6 +108,7 @@ def _get_query_param(param: str) -> str | None:
 
 
 def _set_query_param(param: str, value: str) -> None:
+    """Set a query parameter in both URL and session state."""
     st.query_params[param] = value
 
     if "query_params" not in st.session_state:
@@ -112,6 +118,7 @@ def _set_query_param(param: str, value: str) -> None:
 
 
 def _delete_query_param(param: str) -> None:
+    """Delete a query parameter from the URL and session state."""
     if param in st.query_params:
         del st.query_params[param]
         st.session_state.query_params = st.query_params

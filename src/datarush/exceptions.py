@@ -1,5 +1,8 @@
+"""Application exceptions."""
+
+
 class DataRushError(Exception):
-    """Base exception"""
+    """Base exception."""
 
 
 class UnknownTableError(DataRushError):

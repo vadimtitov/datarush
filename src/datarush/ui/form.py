@@ -1,3 +1,6 @@
+"""Form rendering functions."""
+
+# flake8: noqa: D103
 from __future__ import annotations
 
 from typing import Any, Type
@@ -18,9 +21,7 @@ from datarush.utils.type_utils import convert_to_type, is_string_enum, types_are
 def operation_from_streamlit[T: Operation](
     operation_type: Type[T], tableset: Tableset | None = None, key: int | str | None = None
 ) -> T | None:
-    """
-    Render a streamlit form for a given operation type and return the operation instance.
-    """
+    """Render a streamlit form for a given operation type and return the operation instance."""
     try:
         model_dict = model_dict_from_streamlit(
             operation_type.schema(),
@@ -35,9 +36,7 @@ def operation_from_streamlit[T: Operation](
 def update_operation_from_streamlit(
     operation: Operation, tableset: Tableset | None = None, key: int | str | None = None
 ) -> bool:
-    """
-    Update the operation instance from a streamlit form.
-    """
+    """Update the operation instance from a streamlit form."""
     model_dict = model_dict_from_streamlit(
         operation.schema(),
         tableset=tableset,
@@ -61,8 +60,8 @@ def model_from_streamlit[T: BaseModel](
     key: str | int | None = None,
     current_model: T | None = None,
 ) -> T:
-    """
-    Render a streamlit form based on a Pydantic model and return the model instance.
+    """Render a streamlit form based on a Pydantic model and return the model instance.
+
     Args:
         schema : The Pydantic model class.
         tableset: Optional tableset for table-related fields.
@@ -90,6 +89,7 @@ def model_dict_from_streamlit[T: BaseModel](
 ) -> dict[str, Any]:
     """
     Render a streamlit form based on a Pydantic model and return the values as a dictionary.
+
     Args:
         schema : The Pydantic model class.
         tableset: Optional tableset for table-related fields.

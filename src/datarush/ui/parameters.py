@@ -1,3 +1,5 @@
+"""Parameters page and components."""
+
 import json
 
 import streamlit as st
@@ -9,7 +11,8 @@ from datarush.ui.form import model_from_streamlit
 from datarush.ui.state import get_dataflow
 
 
-def parameters_page():
+def parameters_page() -> None:
+    """Render the parameters page layout."""
     st.subheader("Parameters")
     show_parameters()
     show_add_parameter_ui()
@@ -44,7 +47,7 @@ def parameters_page():
 
 
 def show_parameters() -> None:
-    """Displays and manages the list of parameters."""
+    """Display and manage the list of parameters."""
     dataflow = get_dataflow()
 
     to_remove = []
@@ -68,7 +71,7 @@ def show_parameters() -> None:
 
 
 def show_add_parameter_ui() -> None:
-    """Provides UI for adding new operations."""
+    """Provide UI for adding new parameters."""
     dataflow = get_dataflow()
     with st.expander("Add New Parameter", expanded=False):
         try:
@@ -77,7 +80,7 @@ def show_add_parameter_ui() -> None:
                 ParameterSpec,
                 key=f"parameter_{parameter_future_index}",
             )
-        except ValidationError as e:
+        except ValidationError:
             param = None
 
         if st.button("Add"):
@@ -90,6 +93,7 @@ def show_add_parameter_ui() -> None:
 
 
 def show_context_mocker() -> None:
+    """Provide mock input parameter editor."""
     dataflow = get_dataflow()
 
     if "context_params_mock" not in st.session_state:

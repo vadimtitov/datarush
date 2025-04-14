@@ -1,3 +1,5 @@
+"""S3 object source operation."""
+
 from __future__ import annotations
 
 from pydantic import BaseModel, Field
@@ -9,7 +11,7 @@ from datarush.utils.s3_client import S3Client
 
 
 class S3SourceModel(BaseModel):
-    """S3 Source model"""
+    """S3 object Source model."""
 
     bucket: str = Field(title="Bucket")
     object_key: str = Field(title="Object Key")
@@ -18,15 +20,19 @@ class S3SourceModel(BaseModel):
 
 
 class S3ObjectSource(Operation):
+    """S3 object source operation."""
+
     name = "s3_object"
     title = "S3 Object"
     description = "S3 Object Source"
     model: S3SourceModel
 
     def summary(self):
+        """Provide operation summary."""
         return f"Load S3 object as `{self.model.table_name}` table"
 
     def operate(self, tableset: Tableset) -> Tableset:
+        """Run operation."""
         obj = S3Client().get_object(self.model.bucket, self.model.object_key)
         df = read_file(obj, self.model.content_type)
         tableset.set_df(self.model.table_name, df)

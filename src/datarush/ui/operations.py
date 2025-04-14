@@ -1,3 +1,5 @@
+"""Operation page and components."""
+
 import streamlit as st
 
 from datarush.core.operations import get_operation_type_by_title, list_operation_types
@@ -7,6 +9,7 @@ from datarush.utils.misc import crossed_out, truncate
 
 
 def operations_page():
+    """Render the operations page layout."""
     left_section, right_section = st.columns([2, 2])
 
     with left_section:
@@ -22,6 +25,7 @@ def operations_page():
 
 
 def show_tables() -> None:
+    """Display the currently loaded tables."""
     st.subheader("Tables")
     dataflow = get_dataflow()
 
@@ -40,7 +44,7 @@ def show_tables() -> None:
 
 
 def show_operations() -> None:
-    """Displays and manages the list of operations."""
+    """Display and manage the list of operations."""
     st.subheader("Operations")
     dataflow = get_dataflow()
 
@@ -56,12 +60,8 @@ def show_operations() -> None:
             if update_operation_from_streamlit(op, tableset=dataflow.current_tableset, key=i):
                 st.rerun()
 
-            #
-            # Operation controls
-            #
             cols = st.columns([8, 1, 1, 1, 1, 1])
 
-            # Advanced mode toggle
             if (
                 cols[1].button(
                     "",
@@ -73,30 +73,24 @@ def show_operations() -> None:
                     ),
                     icon=":material/view_list:" if op.advanced_mode else ":material/data_object:",
                 )
-                and i > 0
             ):
                 op.advanced_mode = not op.advanced_mode
                 st.rerun()
 
-            # Move up button
-            if (
+            if i > 0 and (
                 cols[2].button("", key=f"up_{i}", help="Move up", icon=":material/arrow_upward:")
-                and i > 0
             ):
                 dataflow.move_operation(i, i - 1)
                 st.rerun()
 
-            # Move down button
-            if (
+            if i < len(dataflow.operations) - 1 and (
                 cols[3].button(
                     "", key=f"down_{i}", help="Move down", icon=":material/arrow_downward:"
                 )
-                and i < len(dataflow.operations) - 1
             ):
                 dataflow.move_operation(i, i + 1)
                 st.rerun()
 
-            # Enable/disable toggle
             if cols[4].button(
                 "",
                 key=f"toggle_{i}",
@@ -106,7 +100,6 @@ def show_operations() -> None:
                 op.is_enabled = not op.is_enabled
                 st.rerun()
 
-            # Remove button
             if cols[5].button("", key=f"remove_{i}", help="Remove", icon=":material/close:"):
                 to_remove.append(i)
 
@@ -116,7 +109,7 @@ def show_operations() -> None:
 
 
 def show_add_operation_ui() -> None:
-    """Provides UI for adding new operations."""
+    """Provide UI for adding new operations."""
     dataflow = get_dataflow()
     with st.expander("Add New Operation", expanded=False):
         selected_op_title = st.selectbox(

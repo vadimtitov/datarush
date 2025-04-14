@@ -1,3 +1,7 @@
+"""Jinja2 utils."""
+
+# flake8: noqa: D103
+
 from typing import Any
 
 from jinja2 import Template
@@ -8,8 +12,7 @@ from datarush.utils.type_utils import convert_to_type
 
 
 def render_jinja2_template(template_str: str, context: dict) -> str:
-    """
-    Renders a Jinja2 template with the given context.
+    """Render a Jinja2 template with the given context.
 
     Args:
         template_str (str): The Jinja2 template string.
@@ -25,8 +28,8 @@ def render_jinja2_template(template_str: str, context: dict) -> str:
 def model_validate_jinja2[T: BaseModel](
     model_type: type[T], model_dict: dict[str, str], context: dict[str, Any]
 ) -> T:
-    """
-    Validate a model using Jinja2 templates.
+    """Validate a model using Jinja2 templates.
+
     Args:
         model_type (Type[_TModel]): The Pydantic model type to validate.
         model_dict (dict[str, Any]): The dictionary containing the model data where values can be Jinja2 templates.

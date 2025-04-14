@@ -1,3 +1,5 @@
+"""Datarush - no-code data pipelines."""
+
 from datarush.core.dataflow import Operation, Table, Tableset
 from datarush.core.operations import register_operation_type
 from datarush.core.types import BaseOperationModel, ColumnStr, TableStr

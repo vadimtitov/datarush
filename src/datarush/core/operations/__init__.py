@@ -1,3 +1,5 @@
+"""Operations API."""
+
 from typing import Type
 
 from datarush.core.dataflow import Operation
@@ -7,31 +9,23 @@ from datarush.core.operations.transformations import dropna, filter_row, select_
 
 
 def register_operation_type(operation: Type[Operation]) -> None:
-    """
-    Register a new operation type
-    """
+    """Register a new operation type."""
     _TITLE_TO_OPERATION_TYPE[operation.title] = operation
     _NAME_TO_OPERATION_TYPE[operation.name] = operation
 
 
 def list_operation_types() -> list[Type[Operation]]:
-    """
-    List all available operation type
-    """
+    """List all available operation type."""
     return list(_NAME_TO_OPERATION_TYPE.values())
 
 
 def get_operation_type_by_title(title: str) -> Type[Operation]:
-    """
-    Get operation type by operation title
-    """
+    """Get operation type by operation title."""
     return _TITLE_TO_OPERATION_TYPE[title]
 
 
 def get_operation_type_by_name(name: str) -> Type[Operation]:
-    """
-    Get operation type by operation name
-    """
+    """Get operation type by operation name."""
     return _NAME_TO_OPERATION_TYPE[name]
 
 

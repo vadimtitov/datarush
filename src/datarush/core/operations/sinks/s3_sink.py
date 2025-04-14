@@ -1,3 +1,5 @@
+"""S3 object sink."""
+
 from __future__ import annotations
 
 from pydantic import Field
@@ -9,7 +11,7 @@ from datarush.utils.s3_client import S3Client
 
 
 class S3SinkModel(BaseOperationModel):
-    """S3 Sink model"""
+    """Pydantic model for S3 sink operation."""
 
     bucket: str = Field(title="Bucket")
     object_key: str = Field(title="Object Key")
@@ -18,15 +20,22 @@ class S3SinkModel(BaseOperationModel):
 
 
 class S3ObjectSink(Operation):
+    """Operation that writes a table to an S3 object."""
+
     name = "s3_object_sink"
     title = "S3 Object Sink"
     description = "S3 Object Sink"
     model: S3SinkModel
 
     def summary(self):
-        return f"Write `{self.model.table}` to S3 {self.model.bucket}/{self.model.object_key} as {self.model.content_type.value}"
+        """Return a short summary of the operation."""
+        return (
+            f"Write `{self.model.table}` to S3 {self.model.bucket}/{self.model.object_key}"
+            f" as {self.model.content_type.value}"
+        )
 
     def operate(self, tableset: Tableset) -> Tableset:
+        """Write table to S3 and return unmodified tableset."""
         df = tableset.get_df(self.model.table)
         file = to_file(df, self.model.content_type)
         S3Client().put_object(self.model.bucket, self.model.object_key, file)

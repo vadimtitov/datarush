@@ -1,3 +1,5 @@
+"""Types definitions."""
+
 from datetime import date, datetime
 from enum import StrEnum
 from typing import Any, Type
@@ -7,12 +9,14 @@ from pydantic_core import core_schema
 
 
 class ContentType(StrEnum):
+    """Enum representing content types."""
 
     CSV = "CSV"
     JSON = "JSON"
     PARQUET = "PARQUET"
 
     def extension(self):
+        """Get file extensions associated with the content type."""
         return {
             ContentType.CSV: [".csv"],
             ContentType.JSON: [".json"],
@@ -53,20 +57,22 @@ class ParameterSpec(BaseModel):
 
 
 class TableStr(str):
-    """Special string type to mark field that take table name as an input."""
+    """Special string type to mark field that takes table name as input."""
 
     @classmethod
     def __get_pydantic_core_schema__(cls, source_type: Any, handler: GetCoreSchemaHandler):
+        """Get custom schema for Pydantic validation."""
         return core_schema.no_info_after_validator_function(
             lambda v: TableStr(v), core_schema.str_schema()
         )
 
 
 class ColumnStr(str):
-    """Special string type to mark field that take colum name as an input."""
+    """Special string type to mark field that takes column name as input."""
 
     @classmethod
     def __get_pydantic_core_schema__(cls, source_type: Any, handler: GetCoreSchemaHandler):
+        """Get custom schema for Pydantic validation."""
         return core_schema.no_info_after_validator_function(
             lambda v: ColumnStr(v), core_schema.str_schema()
         )
