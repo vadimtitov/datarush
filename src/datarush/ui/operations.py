@@ -1,5 +1,7 @@
 """Operation page and components."""
 
+from typing import cast
+
 import streamlit as st
 
 from datarush.core.operations import get_operation_type_by_title, list_operation_types
@@ -8,7 +10,7 @@ from datarush.ui.state import get_dataflow
 from datarush.utils.misc import crossed_out, truncate
 
 
-def operations_page():
+def operations_page() -> None:
     """Render the operations page layout."""
     left_section, right_section = st.columns([2, 2])
 
@@ -107,8 +109,11 @@ def show_add_operation_ui() -> None:
     """Provide UI for adding new operations."""
     dataflow = get_dataflow()
     with st.expander("Add New Operation", expanded=False):
-        selected_op_title = st.selectbox(
-            "Choose an operation to add", [op_type.title for op_type in list_operation_types()]
+        selected_op_title = cast(
+            str,
+            st.selectbox(
+                "Choose an operation to add", [op_type.title for op_type in list_operation_types()]
+            ),
         )
         if not selected_op_title:
             return

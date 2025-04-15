@@ -1,7 +1,6 @@
 """S3 client wrapper for basic file and folder operations."""
 
 from io import BytesIO
-from typing import Any
 
 import boto3
 from botocore.client import Config
@@ -26,7 +25,7 @@ class S3Client:
     def get_object(self, bucket: str, key: str) -> BytesIO:
         """Retrieve an object from S3 as BytesIO."""
         obj = self._client.get_object(Bucket=bucket, Key=key)
-        return obj["Body"]
+        return BytesIO(obj["Body"].read())
 
     def put_object(self, bucket: str, key: str, body: BytesIO) -> None:
         """Upload an object to S3."""
@@ -36,7 +35,7 @@ class S3Client:
         """Delete an object from S3."""
         self._client.delete_object(Bucket=bucket, Key=key)
 
-    def list_object_keys(self, bucket: str, prefix: str) -> list[dict[str, Any]]:
+    def list_object_keys(self, bucket: str, prefix: str) -> list[str]:
         """List object keys under a prefix in an S3 bucket."""
         prefix = prefix.strip("/")
         response = self._client.list_objects_v2(Bucket=bucket, Prefix=prefix)

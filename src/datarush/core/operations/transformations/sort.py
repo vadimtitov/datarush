@@ -10,7 +10,7 @@ class SortColumnModel(BaseOperationModel):
     """Sort operation model."""
 
     table: TableStr = Field(title="Table", description="Table to sort")
-    column: ColumnStr = Field(title="Column", description="Column to sort by", jinja=True)
+    column: ColumnStr = Field(title="Column", description="Column to sort by")
     ascending: bool = Field(
         title="Ascending",
         description="Sort in ascending order",

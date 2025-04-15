@@ -1,6 +1,7 @@
 """Sidebar section for template selection, creation, and page navigation."""
 
 import streamlit as st
+from streamlit.navigation.page import StreamlitPage
 
 from datarush.core.templates import (
     TemplateManager,
@@ -13,7 +14,7 @@ from datarush.ui.state import get_dataflow, set_dataflow
 OPTION_CREATE_NEW_TEMPLATE = "- Create New Template -"
 
 
-def sidebar_section(pages: list[st.Page]) -> None:
+def sidebar_section(pages: list[StreamlitPage]) -> None:
     """Render the sidebar with template and page controls."""
     st.sidebar.title("DataRush Template")
     st.sidebar.divider()

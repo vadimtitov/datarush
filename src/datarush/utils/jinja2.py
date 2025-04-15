@@ -41,7 +41,7 @@ def model_validate_jinja2[T: BaseModel](
     for name, field in model_type.model_fields.items():
         default = field.default if field.default is not PydanticUndefined else None
         template = model_dict.get(name, default)
-        value = render_jinja2_template(template, context=context)
+        value = render_jinja2_template(template, context=context) if template else None
         if value is not None:
             rendered_dict[name] = convert_to_type(value, field.annotation)
 

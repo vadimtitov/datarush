@@ -3,7 +3,7 @@
 # flake8: noqa: D103
 from __future__ import annotations
 
-from typing import Any, Type
+from typing import Any, Type, cast
 
 import jinja2
 import streamlit as st
@@ -99,10 +99,10 @@ def model_dict_from_streamlit[T: BaseModel](
     Returns:
         dict[str, Any]: The dictionary containing the values from the Streamlit widgets.
     """
-    model_dict = {}
+    model_dict: dict[str, Any] = {}
 
     for name, field in schema.model_fields.items():
-        kwargs = {
+        kwargs: dict[str, Any] = {
             "label": field.title or name,
             "key": f"{schema.__name__}_{advanced_mode}_{name}_{key or ''}",
             "help": field.description,
@@ -200,7 +200,7 @@ def model_dict_from_streamlit[T: BaseModel](
                     )
 
         elif is_string_enum(field.annotation):
-            value = st.selectbox(options=list(field.annotation), **kwargs)
+            value = st.selectbox(options=list(field.annotation), **kwargs)  # type: ignore
 
         elif field.annotation is bytes:
             content_type: ContentType | None = model_dict.get("content_type")
@@ -210,10 +210,10 @@ def model_dict_from_streamlit[T: BaseModel](
 
         elif field.annotation is bool:
             value = st.checkbox(
-                value=current_value if current_value is not None else default, **kwargs
+                value=cast(bool, current_value if current_value is not None else default), **kwargs
             )
 
-        elif issubclass(field.annotation, str):
+        elif issubclass(field.annotation, str):  # type: ignore
             value = st.text_input(
                 value=current_value if current_value is not None else (default or ""), **kwargs
             )

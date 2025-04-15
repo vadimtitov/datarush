@@ -27,7 +27,7 @@ class S3ObjectSource(Operation):
     description = "S3 Object Source"
     model: S3SourceModel
 
-    def summary(self):
+    def summary(self) -> str:
         """Provide operation summary."""
         return f"Load S3 object as `{self.model.table_name}` table"
 

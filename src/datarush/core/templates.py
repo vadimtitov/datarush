@@ -5,7 +5,7 @@ import json
 import os
 from functools import cache
 from io import BytesIO
-from typing import Any, TypedDict
+from typing import Any, TypedDict, cast
 
 from datarush.config import (
     FilesystemTemplateStoreConfig,
@@ -21,7 +21,7 @@ from datarush.utils.s3_client import S3Client
 _TEMPLATES_FOLDER = "templates"
 _TEMPLATE_FILE = "template.json"
 
-ParameterDict = TypedDict("ParameterDict", ParameterSpec.__annotations__)
+ParameterDict = TypedDict("ParameterDict", ParameterSpec.__annotations__)  # type: ignore
 
 
 class OperationDict(TypedDict):
@@ -88,7 +88,7 @@ class S3TemplateManager(TemplateManager):
         """Read a template from the S3 template store."""
         key = f"{self._prefix}/{_TEMPLATES_FOLDER}/{template_name}/version={version}/{_TEMPLATE_FILE}"
         obj = self._s3.get_object(self._bucket, key)
-        return json.load(obj)
+        return cast(TemplateDict, json.load(obj))
 
     def write_template(self, template: TemplateDict, template_name: str, version: str) -> None:
         """Write a template to the S3 template store."""
@@ -142,7 +142,7 @@ class FilesystemTemplateManager(TemplateManager):
             f"{self._path}/{_TEMPLATES_FOLDER}/{template_name}/version={version}/{_TEMPLATE_FILE}"
         )
         with open(template_path, "r") as f:
-            return json.load(f)
+            return cast(TemplateDict, json.load(f))
 
     def write_template(self, template: TemplateDict, template_name: str, version: str) -> None:
         """Write a template to the filesystem."""
@@ -188,7 +188,7 @@ def template_to_dataflow(template: TemplateDict) -> Dataflow:
 
 def dataflow_to_template(dataflow: Dataflow) -> TemplateDict:
     """Convert a dataflow to a template."""
-    paramaters = [param.model_dump() for param in dataflow.parameters]
+    paramaters = [cast(ParameterDict, param.model_dump()) for param in dataflow.parameters]
     operations = [
         {
             "name": operation.name,

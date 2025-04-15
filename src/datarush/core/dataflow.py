@@ -4,12 +4,11 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Iterator, Type, TypeVar, get_type_hints
+from typing import Any, Iterable, Iterator, Type, get_type_hints
 
 import pandas as pd
-from pydantic import BaseModel
 
-from datarush.core.types import ParameterSpec
+from datarush.core.types import BaseOperationModel, ParameterSpec
 from datarush.exceptions import UnknownTableError
 from datarush.utils.jinja2 import model_validate_jinja2
 
@@ -32,7 +31,7 @@ class Table:
 class Tableset:
     """Represent collection of tables."""
 
-    def __init__(self, tables: list[Table]) -> None:
+    def __init__(self, tables: Iterable[Table]) -> None:
         """Initialize tableset with a list of tables."""
         self._table_map = {table.name: table for table in tables}
 
@@ -72,7 +71,8 @@ class Tableset:
         return bool(self._table_map)
 
 
-class Operation(ABC):
+# flake8: noqa: D103
+class Operation[T: BaseOperationModel](ABC):
     """Represent operation."""
 
     is_enabled: bool = True
@@ -81,7 +81,7 @@ class Operation(ABC):
     def __init__(self, model_dict: dict[str, Any], advanced_mode: bool = False) -> None:
         """Initialize operation with model dictionary and mode."""
         self._model_dict = model_dict
-        self._template_context = {}
+        self._template_context: dict[str, Any] = {}
         self.advanced_mode = advanced_mode
 
     @property
@@ -90,7 +90,7 @@ class Operation(ABC):
         return self._model_dict
 
     @property
-    def model(self) -> _TModel:
+    def model(self) -> T:
         """Get model with operation parameters."""
         if not self.advanced_mode:
             return self.schema().model_validate(self.model_dict)
@@ -100,9 +100,9 @@ class Operation(ABC):
         )
 
     @classmethod
-    def schema(cls) -> Type[_TModel]:
+    def schema(cls) -> Type[T]:
         """Get the model schema/type used by this operation."""
-        return get_type_hints(cls)["model"]
+        return get_type_hints(cls)["model"]  # type: ignore
 
     def update_template_context(self, context: dict[str, Any]) -> None:
         """Update the template context for Jinja2 rendering."""
@@ -148,7 +148,7 @@ class Dataflow:
         """Initialize dataflow with optional parameters and operations."""
         self._current_tableset = Tableset([])
         self._parameters = parameters or []
-        self._parameters_values = {}
+        self._parameters_values: dict[str, Any] = {}
         self._operations = operations or []
 
     @property
@@ -219,6 +219,3 @@ class Dataflow:
                 context = self.get_current_context()
                 operation.update_template_context(context)
                 self._current_tableset = operation.operate(self._current_tableset)
-
-
-_TModel = TypeVar("_TModel", bound=BaseModel)

@@ -7,11 +7,14 @@ from datarush.core.operations.sinks import s3_sink
 from datarush.core.operations.sources import http_source, local_file_source, s3_object_source
 from datarush.core.operations.transformations import dropna, filter_row, select_columns, sort
 
+_TITLE_TO_OPERATION_TYPE: dict[str, Type[Operation]] = {}
+_NAME_TO_OPERATION_TYPE: dict[str, Type[Operation]] = {}
+
 
 def register_operation_type(operation: Type[Operation]) -> None:
     """Register a new operation type."""
-    _TITLE_TO_OPERATION_TYPE[operation.title] = operation
-    _NAME_TO_OPERATION_TYPE[operation.name] = operation
+    _TITLE_TO_OPERATION_TYPE[operation.title] = operation  # type: ignore
+    _NAME_TO_OPERATION_TYPE[operation.name] = operation  # type: ignore
 
 
 def list_operation_types() -> list[Type[Operation]]:
@@ -29,10 +32,6 @@ def get_operation_type_by_name(name: str) -> Type[Operation]:
     return _NAME_TO_OPERATION_TYPE[name]
 
 
-_TITLE_TO_OPERATION_TYPE: dict[str, Type[Operation]] = {}
-_NAME_TO_OPERATION_TYPE: dict[str, Type[Operation]] = {}
-
-
 # Register build-in operations
 for _op_type in [
     # Source
@@ -47,4 +46,4 @@ for _op_type in [
     # Sink
     s3_sink.S3ObjectSink,
 ]:
-    register_operation_type(_op_type)
+    register_operation_type(_op_type)  # type: ignore

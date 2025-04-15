@@ -6,7 +6,7 @@ from datarush.config import AppConfig
 from datarush.ui import operations, parameters, save, sidebar
 
 
-def main():
+def main() -> None:
     """Run DataRush UI."""
     st.set_page_config(layout="wide")
 

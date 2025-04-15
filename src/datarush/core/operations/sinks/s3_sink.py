@@ -27,7 +27,7 @@ class S3ObjectSink(Operation):
     description = "S3 Object Sink"
     model: S3SinkModel
 
-    def summary(self):
+    def summary(self) -> str:
         """Return a short summary of the operation."""
         return (
             f"Write `{self.model.table}` to S3 {self.model.bucket}/{self.model.object_key}"
