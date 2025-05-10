@@ -32,7 +32,13 @@ def is_string_enum(type_: Type | None) -> bool:
 
 def types_are_equal(type1: Type | None, type2: Type | None) -> bool:
     """Check if two generic types are structurally equal."""
-    return get_origin(type1) == get_origin(type2) and get_args(type1) == get_args(type2)
+    origin1, origin2 = get_origin(type1), get_origin(type2)
+    args1, args2 = get_args(type1), get_args(type2)
+
+    if origin1 is None or origin2 is None:
+        return type1 is type2
+
+    return origin1 == origin2 and args1 == args2
 
 
 def _to_bool(value: str) -> bool:
