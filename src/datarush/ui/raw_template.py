@@ -9,7 +9,7 @@ from datarush.core.templates import dataflow_to_template
 from datarush.ui.state import get_dataflow
 
 
-def save_page() -> None:
+def raw_template_page() -> None:
     """Render the save page with template JSON viewer."""
     st.subheader("Template JSON")
 
@@ -22,8 +22,3 @@ def save_page() -> None:
         language="json",
         theme="twilight",
     )
-
-    if st.button("Save"):
-        st.success("Template saved")
-
-    st.data_editor({}, use_container_width=True)

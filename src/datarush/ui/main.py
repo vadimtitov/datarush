@@ -3,7 +3,7 @@
 import streamlit as st
 
 from datarush.config import AppConfig
-from datarush.ui import operations, parameters, save, sidebar
+from datarush.ui import operations, parameters, raw_template, sidebar
 
 
 def main() -> None:
@@ -13,7 +13,7 @@ def main() -> None:
     pages = [
         st.Page(parameters.parameters_page, title="Parameters"),
         st.Page(operations.operations_page, title="Operations"),
-        st.Page(save.save_page, title="Raw"),
+        st.Page(raw_template.raw_template_page, title="Raw"),
     ]
 
     main_page = st.navigation(pages, position="hidden")
