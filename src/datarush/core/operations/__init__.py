@@ -3,8 +3,13 @@
 from typing import Type
 
 from datarush.core.dataflow import Operation
-from datarush.core.operations.sinks import s3_sink
-from datarush.core.operations.sources import http_source, local_file_source, s3_object_source
+from datarush.core.operations.sinks import s3_dataset_sink, s3_sink
+from datarush.core.operations.sources import (
+    http_source,
+    local_file_source,
+    s3_dataset_source,
+    s3_object_source,
+)
 from datarush.core.operations.transformations import dropna, filter_row, select_columns, sort
 
 _TITLE_TO_OPERATION_TYPE: dict[str, Type[Operation]] = {}
@@ -38,6 +43,7 @@ for _op_type in [
     http_source.HttpSource,
     local_file_source.LocalFileSource,
     s3_object_source.S3ObjectSource,
+    s3_dataset_source.S3DatasetSource,
     # Transform
     dropna.DropNaValues,
     sort.SortByColumn,
@@ -45,5 +51,6 @@ for _op_type in [
     select_columns.SelectColumns,
     # Sink
     s3_sink.S3ObjectSink,
+    s3_dataset_sink.S3DatasetSink,
 ]:
     register_operation_type(_op_type)  # type: ignore

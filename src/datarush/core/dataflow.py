@@ -83,6 +83,11 @@ class Operation[T: BaseOperationModel](ABC):
         self._model_dict = model_dict
         self._template_context: dict[str, Any] = {}
         self.advanced_mode = advanced_mode
+        self.initialize()
+
+    def initialize(self) -> None:
+        """Initialize operation."""
+        pass
 
     @property
     def model_dict(self) -> dict[str, Any]:
