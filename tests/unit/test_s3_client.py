@@ -6,11 +6,7 @@ import pytest
 from pandas.testing import assert_frame_equal
 
 from datarush.core.types import ContentType
-from datarush.utils.s3_client import (
-    DatasetWriteMode,
-    S3Client,
-    S3Dataset,
-)
+from datarush.utils.s3_client import DatasetWriteMode, S3Client, S3Dataset
 
 
 @pytest.fixture

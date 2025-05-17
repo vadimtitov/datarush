@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-import awswrangler as wr
-import boto3
+import pandas as pd
 from pydantic import BaseModel, Field
 
 from datarush.config import S3Config
 from datarush.core.dataflow import Operation, Tableset
 from datarush.core.types import ContentType
+from datarush.utils.s3_client import DatasetDoesNotExistError, S3Dataset
 
 
 class S3DatasetSourceModel(BaseModel):
@@ -18,6 +18,11 @@ class S3DatasetSourceModel(BaseModel):
     path: str = Field(title="Dataset Path", default="datasets/wrangler/my-dataset-2")
     content_type: ContentType = Field(title="Content Type")
     table_name: str = Field(title="Table Name", default="s3_table")
+    error_on_empty: bool = Field(
+        title="Error on empty",
+        default=True,
+        description="Raise an error if the dataset is empty",
+    )
 
 
 class S3DatasetSource(Operation):
@@ -28,13 +33,9 @@ class S3DatasetSource(Operation):
     description = "Download dataset from S3"
     model: S3DatasetSourceModel
 
-    def initialize(self):
-        config = S3Config.fromenv()
-        self._session = boto3.Session(
-            aws_access_key_id=config.access_key,
-            aws_secret_access_key=config.secret_key.reveal(),
-        )
-        wr.config.s3_endpoint_url = config.endpoint
+    def initialize(self) -> None:
+        """Initialize the operation."""
+        self._config = S3Config.fromenv()
 
     def summary(self) -> str:
         """Provide operation summary."""
@@ -42,29 +43,17 @@ class S3DatasetSource(Operation):
 
     def operate(self, tableset: Tableset) -> Tableset:
         """Run operation."""
-        path = f"s3://{self.model.bucket}/{self.model.path.strip('/')}"
-
-        if self.model.content_type == ContentType.JSON:
-            df = wr.s3.read_json(
-                boto3_session=self._session,
-                path=path,
-                dataset=True,
-                # orient="columns"
-            )
-        elif self.model.content_type == ContentType.CSV:
-            df = wr.s3.read_csv(
-                boto3_session=self._session,
-                path=path,
-                dataset=True,
-            )
-        elif self.model.content_type == ContentType.PARQUET:
-            df = wr.s3.read_parquet(
-                boto3_session=self._session,
-                path=path,
-                dataset=True,
-            )
-        else:
-            raise ValueError(f"Unsupported content type: {self.model.content_type}")
-
+        dataset = S3Dataset(
+            bucket=self.model.bucket,
+            prefix=self.model.path,
+            content_type=self.model.content_type,
+            config=self._config,
+        )
+        try:
+            df = dataset.read()
+        except DatasetDoesNotExistError:
+            if self.model.error_on_empty:
+                raise
+            df = pd.DataFrame()
         tableset.set_df(self.model.table_name, df)
         return tableset

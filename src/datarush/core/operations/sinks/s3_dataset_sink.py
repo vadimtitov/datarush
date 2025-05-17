@@ -2,25 +2,29 @@
 
 from __future__ import annotations
 
-import awswrangler as wr
-import boto3
 from pydantic import Field
 
 from datarush.config import S3Config
 from datarush.core.dataflow import Operation, Tableset
 from datarush.core.types import BaseOperationModel, ColumnStr, ContentType, TableStr
+from datarush.utils.s3_client import DatasetWriteMode, S3Dataset
 
 
 class S3DatasetSinkModel(BaseOperationModel):
     """Pydantic model for S3 dataset sink operation."""
 
     bucket: str = Field(title="Bucket")
-    path: str = Field(title="Dataset Path")
-    content_type: ContentType = Field(title="Content Type")
+    path: str = Field(title="Dataset path")
+    content_type: ContentType = Field(title="Content type")
+    mode: DatasetWriteMode = Field(title="Write mode")
     table: TableStr = Field(title="Table to write")
     partition_columns: list[ColumnStr] = Field(
-        title="Partition Columns",
-        default=None,
+        title="Partition columns", default=None, description="List of columns to partition by"  # type: ignore
+    )
+    unique_ids: list[ColumnStr] = Field(
+        title="Unique IDs",
+        default=None,  # type: ignore
+        description="List of columns to use as unique IDs for the dataset records deduplication. Only relevant for append mode.",
     )
 
 
@@ -32,13 +36,9 @@ class S3DatasetSink(Operation):
     description = "Write table as S3 dataset"
     model: S3DatasetSinkModel
 
-    def initialize(self):
-        config = S3Config.fromenv()
-        self._session = boto3.Session(
-            aws_access_key_id=config.access_key,
-            aws_secret_access_key=config.secret_key.reveal(),
-        )
-        wr.config.s3_endpoint_url = config.endpoint
+    def initialize(self) -> None:
+        """Initialize the operation."""
+        self._config = S3Config.fromenv()
 
     def summary(self) -> str:
         """Return a short summary of the operation."""
@@ -50,42 +50,15 @@ class S3DatasetSink(Operation):
 
     def operate(self, tableset: Tableset) -> Tableset:
         """Write table to S3 dataset and return unmodified tableset."""
-        path = f"s3://{self.model.bucket}/{self.model.path.strip('/')}"
+        dataset = S3Dataset(
+            bucket=self.model.bucket,
+            prefix=self.model.path,
+            content_type=self.model.content_type,
+            partition_columns=self.model.partition_columns,
+            unique_ids=self.model.unique_ids,
+            write_mode=self.model.mode,
+            config=self._config,
+        )
         df = tableset.get_df(self.model.table)
-
-        if self.model.content_type == ContentType.JSON:
-            wr.s3.to_json(
-                df=df,
-                path=path,
-                dataset=True,
-                boto3_session=self._session,
-                partition_cols=self.model.partition_columns,
-                mode="overwrite",
-                orient="records",  # important
-                lines=True,  # important
-                index=False,  # important
-            )
-        elif self.model.content_type == ContentType.CSV:
-            wr.s3.to_csv(
-                df=df,
-                path=path,
-                dataset=True,
-                boto3_session=self._session,
-                partition_cols=self.model.partition_columns,
-                mode="overwrite",
-                index=False,  # important
-            )
-        elif self.model.content_type == ContentType.PARQUET:
-            wr.s3.to_parquet(
-                df=df,
-                path=path,
-                dataset=True,
-                boto3_session=self._session,
-                partition_cols=self.model.partition_columns,
-                mode="overwrite",
-                index=False,  # important
-            )
-        else:
-            raise ValueError(f"Unsupported content type: {self.model.content_type}")
-
+        dataset.write(df)
         return tableset
