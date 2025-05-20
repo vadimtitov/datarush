@@ -7,3 +7,7 @@ class DataRushError(Exception):
 
 class UnknownTableError(DataRushError):
     """Unknown table error."""
+
+
+class TemplateAlreadyExistsError(DataRushError):
+    """Template already exists error."""
