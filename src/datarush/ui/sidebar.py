@@ -85,6 +85,7 @@ def sidebar_section(pages: list[StreamlitPage]) -> None:
                 template = template_manager.read_template(selected_template, selected_version)
                 dataflow = template_to_dataflow(template)
                 set_dataflow(dataflow)
+                st.sidebar.success("Template loaded")
 
             if cols[3].button("Save"):
                 modal.open()
