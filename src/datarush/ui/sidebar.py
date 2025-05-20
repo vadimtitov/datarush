@@ -2,6 +2,7 @@
 
 import streamlit as st
 from streamlit.navigation.page import StreamlitPage
+from streamlit_modal import Modal
 
 from datarush.core.templates import (
     TemplateManager,
@@ -9,6 +10,7 @@ from datarush.core.templates import (
     get_template_manager,
     template_to_dataflow,
 )
+from datarush.exceptions import TemplateAlreadyExistsError
 from datarush.ui.state import get_dataflow, set_dataflow
 
 OPTION_CREATE_NEW_TEMPLATE = "- Create New Template -"
@@ -53,11 +55,39 @@ def sidebar_section(pages: list[StreamlitPage]) -> None:
         if selected_template and selected_version:
             _set_query_param("template", selected_template)
             _set_query_param("version", selected_version)
+            modal = Modal(f"Save template `{selected_template}`", key="save_template_modal")
 
-            if st.sidebar.button("Load"):
+            if modal.is_open():
+                with modal.container():
+                    new_version = st.text_input(
+                        "New Version", value=selected_version, key="new_version_text_input"
+                    )
+
+                    if st.button("Save", key="save_template_modal_button"):
+                        template = dataflow_to_template(get_dataflow())
+                        try:
+                            template_manager.write_template(
+                                template, template_name=selected_template, version=new_version
+                            )
+                            _set_query_param("version", new_version)
+                            modal.close()
+                            st.success(
+                                f"Template '{selected_template}' version '{new_version}' saved successfully"
+                            )
+                        except TemplateAlreadyExistsError:
+                            st.error(
+                                f"Template '{selected_template}' version '{new_version}' already exists"
+                            )
+
+            cols = st.sidebar.columns([1, 1, 1, 1])
+
+            if cols[0].button("Load"):
                 template = template_manager.read_template(selected_template, selected_version)
                 dataflow = template_to_dataflow(template)
                 set_dataflow(dataflow)
+
+            if cols[3].button("Save"):
+                modal.open()
 
     else:
         with st.sidebar.expander("Create New Template", expanded=True):
@@ -66,15 +96,20 @@ def sidebar_section(pages: list[StreamlitPage]) -> None:
             if new_template_name and new_template_version:
                 if st.sidebar.button("Save New Template"):
                     template = dataflow_to_template(get_dataflow())
-                    template_manager.write_template(
-                        template, template_name=new_template_name, version=new_template_version
-                    )
-                    _set_query_param("template", new_template_name)
-                    _set_query_param("version", new_template_version)
+                    try:
+                        template_manager.write_template(
+                            template, template_name=new_template_name, version=new_template_version
+                        )
+                        _set_query_param("template", new_template_name)
+                        _set_query_param("version", new_template_version)
 
-                    st.sidebar.success(
-                        f"New template '{new_template_name}' created with version {new_template_version}"
-                    )
+                        st.sidebar.success(
+                            f"New template '{new_template_name}' created with version '{new_template_version}'"
+                        )
+                    except TemplateAlreadyExistsError:
+                        st.sidebar.error(
+                            f"Template '{new_template_name}' version '{new_template_version}' already exists"
+                        )
 
     st.sidebar.divider()
 

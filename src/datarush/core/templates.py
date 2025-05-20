@@ -16,6 +16,7 @@ from datarush.config import (
 from datarush.core.dataflow import Dataflow, Operation
 from datarush.core.operations import get_operation_type_by_name
 from datarush.core.types import ParameterSpec
+from datarush.exceptions import TemplateAlreadyExistsError
 from datarush.utils.s3_client import S3Client
 
 _TEMPLATES_FOLDER = "templates"
@@ -94,7 +95,7 @@ class S3TemplateManager(TemplateManager):
         """Write a template to the S3 template store."""
         key = f"{self._prefix}/{_TEMPLATES_FOLDER}/{template_name}/version={version}/{_TEMPLATE_FILE}"
         if self._s3.list_object_keys(self._bucket, key):
-            raise ValueError(f"Template version {version} already exists")
+            raise TemplateAlreadyExistsError(f"Template version {version} already exists")
 
         buffer = BytesIO(json.dumps(template).encode("utf-8"))
         self._s3.put_object(self._bucket, key, buffer)
@@ -150,7 +151,7 @@ class FilesystemTemplateManager(TemplateManager):
         os.makedirs(template_path, exist_ok=True)
 
         if os.path.exists(f"{template_path}/{_TEMPLATE_FILE}"):
-            raise ValueError(f"Template version {version} already exists")
+            raise TemplateAlreadyExistsError(f"Template version {version} already exists")
 
         with open(f"{template_path}/{_TEMPLATE_FILE}", "w") as f:
             json.dump(template, f, indent=4)
