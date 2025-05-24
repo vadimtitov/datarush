@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from datetime import date, datetime
 from enum import Enum
-from typing import Any, Callable, Type, cast, get_args, get_origin
+from typing import Any, Callable, Literal, Type, cast, get_args, get_origin
 
 from datarush.core.types import ColumnStr, TableStr
 
@@ -27,7 +27,19 @@ def is_string_enum(type_: Type | None) -> bool:
     if type_ is None:
         return False
     origin_cls = get_origin(type_) or type_
-    return issubclass(origin_cls, str) and issubclass(origin_cls, Enum)
+    try:
+        return issubclass(origin_cls, str) and issubclass(origin_cls, Enum)
+    except TypeError:
+        # If type_ is not a class or does not support subclassing, return False
+        return False
+
+
+def is_literal(type_: Type | None) -> bool:
+    """Check if the type is a Literal."""
+    if type_ is None:
+        return False
+
+    return get_origin(type_) is Literal
 
 
 def types_are_equal(type1: Type | None, type2: Type | None) -> bool:
