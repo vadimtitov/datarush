@@ -79,7 +79,7 @@ def sidebar_section(pages: list[StreamlitPage]) -> None:
                                 f"Template '{selected_template}' version '{new_version}' already exists"
                             )
 
-            cols = st.sidebar.columns([1, 1, 1, 1])
+            cols = st.sidebar.columns([1, 1, 1])
 
             if cols[0].button("Load"):
                 template = template_manager.read_template(selected_template, selected_version)
@@ -87,7 +87,7 @@ def sidebar_section(pages: list[StreamlitPage]) -> None:
                 set_dataflow(dataflow)
                 st.sidebar.success("Template loaded")
 
-            if cols[3].button("Save"):
+            if cols[2].button("Save"):
                 modal.open()
 
     else:
