@@ -1,5 +1,6 @@
 """Types definitions."""
 
+from dataclasses import dataclass
 from datetime import date, datetime
 from enum import StrEnum
 from typing import Any, Type
@@ -80,6 +81,15 @@ class ColumnStr(str):
         return core_schema.no_info_after_validator_function(
             lambda v: ColumnStr(v), core_schema.str_schema()
         )
+
+
+@dataclass(frozen=True)
+class ColumnStrMeta:
+    """Metadata for ColumnStr type."""
+
+    table_field: str = "table"
+    tables_field: str = "tables"
+    table_fields: list[str] | None = None
 
 
 class BaseOperationModel(BaseModel):
