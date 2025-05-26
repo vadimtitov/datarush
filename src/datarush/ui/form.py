@@ -12,8 +12,10 @@ from pydantic_core import PydanticUndefined
 from streamlit_ace import st_ace
 
 from datarush.core.dataflow import Operation, Tableset
-from datarush.core.types import ColumnStr, ColumnStrMeta, ContentType, TableStr
+from datarush.core.operations.transformations.filter_row import FilterRowModel
+from datarush.core.types import ColumnStr, ColumnStrMeta, ContentType, TableStr, ValueType
 from datarush.ui.state import get_dataflow
+from datarush.utils.conditions import ConditionOperator, RowCondition
 from datarush.utils.jinja2 import render_jinja2_template
 from datarush.utils.type_utils import convert_to_type, is_literal, is_string_enum, types_are_equal
 
@@ -168,26 +170,12 @@ def model_dict_from_streamlit[T: BaseModel](
 
         elif field.annotation is ColumnStr or types_are_equal(field.annotation, list[ColumnStr]):
             if tableset:
-                relevant_tables = []
-
-                if field.metadata and isinstance(field.metadata[0], ColumnStrMeta):
-                    column_meta = field.metadata[0]
-                else:
-                    column_meta = ColumnStrMeta()
-
-                table = model_dict.get(column_meta.table_field)
-                if table:
-                    relevant_tables.append(table)
-
-                tables = model_dict.get(column_meta.tables_field, []) + [
-                    model_dict.get(table_field) for table_field in column_meta.table_fields or []
-                ]
-                if tables:
-                    relevant_tables.extend(tables)
-
-                relevant_columns = sorted(
-                    {col for name in relevant_tables for col in tableset.get_df(name).columns}
+                relevant_columns = _get_relevant_columns(
+                    tableset=tableset,
+                    column_meta=ColumnStrMeta.from_pydantic_field(field),
+                    model_dict=model_dict,
                 )
+
                 if field.annotation is ColumnStr:
                     index = (
                         relevant_columns.index(current_value) if current_value is not None else 0
@@ -239,6 +227,18 @@ def model_dict_from_streamlit[T: BaseModel](
                 value=current_value if current_value is not None else default, step=0.01, **kwargs
             )
 
+        elif field.annotation is RowCondition:
+            relevant_columns = _get_relevant_columns(
+                tableset=tableset,
+                column_meta=ColumnStrMeta.from_pydantic_field(field),
+                model_dict=model_dict,
+            )
+            value = _condition_value(
+                key=kwargs["key"] + "single_condition", column_options=relevant_columns
+            )
+            if value is None:
+                value = current_value if current_value is not None else default
+
         else:
             raise TypeError(f"Not supported type: {field.annotation}")
 
@@ -250,3 +250,71 @@ def model_dict_from_streamlit[T: BaseModel](
         schema.model_validate(model_dict)
 
     return model_dict
+
+
+def _get_relevant_columns(
+    tableset: Tableset | None = None,
+    column_meta: ColumnStrMeta | None = None,
+    model_dict: dict[str, Any] | None = None,
+) -> list[str]:
+    """Get relevant columns from the tableset based on the column metadata."""
+    if not tableset:
+        return []
+
+    relevant_tables = []
+    column_meta = column_meta or ColumnStrMeta()
+    model_dict = model_dict or {}
+
+    table = model_dict.get(column_meta.table_field)
+    if table:
+        relevant_tables.append(table)
+
+    tables = model_dict.get(column_meta.tables_field, []) + [
+        model_dict.get(table_field) for table_field in column_meta.table_fields or []
+    ]
+    if tables:
+        relevant_tables.extend(tables)
+
+    relevant_columns = sorted(
+        {col for name in relevant_tables for col in tableset.get_df(name).columns}
+    )
+
+    return relevant_columns
+
+
+def _condition_value(key: str, column_options: list[str] | None = None) -> dict | None:
+    """Render a condition value input form."""
+    with st.container(border=True, key=key):
+        st.write("Condition")
+
+        cols = st.columns([2, 1])
+        with cols[0]:
+            if column_options:
+                column = st.selectbox("Column", options=column_options, key=key + "_column_select")
+            else:
+                column = st.text_input("Column", key="condition_column")
+        with cols[1]:
+            operator = ConditionOperator(
+                st.selectbox("Operator", options=list(ConditionOperator), key=key + "_operator")
+            )
+
+        cols = st.columns([2, 1])
+        with cols[0]:
+            value = st.text_input("Value", key=key + "_value")
+        with cols[1]:
+            value_type = ValueType(
+                st.selectbox(
+                    "Type",
+                    options=list(ValueType),
+                    key=key + "_value_type",
+                )
+            )
+        negate = st.checkbox("Negate", key=key + "_negate")
+
+    if column and value is not None or value != "" and operator:
+        data = RowCondition(
+            column=column, operator=operator, value=value, value_type=value_type, negate=negate
+        ).model_dump()
+        return data
+
+    return None

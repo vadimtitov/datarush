@@ -1,11 +1,14 @@
 """Types definitions."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 from datetime import date, datetime
 from enum import StrEnum
 from typing import Any, Type
 
 from pydantic import BaseModel, GetCoreSchemaHandler
+from pydantic.fields import FieldInfo
 from pydantic_core import CoreSchema, core_schema
 
 
@@ -25,7 +28,7 @@ class ContentType(StrEnum):
         }[self]
 
 
-class ParameterType(StrEnum):
+class ValueType(StrEnum):
     """Input parameters types."""
 
     STRING = "string"
@@ -38,12 +41,12 @@ class ParameterType(StrEnum):
     def get_type(self) -> Type:
         """Get the corresponding Python type for the parameter type."""
         return {
-            ParameterType.STRING: str,
-            ParameterType.INTEGER: int,
-            ParameterType.FLOAT: float,
-            ParameterType.DATE: date,
-            ParameterType.DATETIME: datetime,
-            ParameterType.BOOLEAN: bool,
+            ValueType.STRING: str,
+            ValueType.INTEGER: int,
+            ValueType.FLOAT: float,
+            ValueType.DATE: date,
+            ValueType.DATETIME: datetime,
+            ValueType.BOOLEAN: bool,
         }[self]
 
 
@@ -51,7 +54,7 @@ class ParameterSpec(BaseModel):
     """Parameter specification."""
 
     name: str
-    type: ParameterType
+    type: ValueType
     description: str
     default: str
     required: bool
@@ -90,6 +93,40 @@ class ColumnStrMeta:
     table_field: str = "table"
     tables_field: str = "tables"
     table_fields: list[str] | None = None
+
+    @classmethod
+    def from_pydantic_field(cls, field: FieldInfo) -> ColumnStrMeta:
+        """Extract ColumnStrMeta from Pydantic field metadata."""
+        for annotation in field.metadata or []:
+            if isinstance(annotation, ColumnStrMeta):
+                return annotation
+        return ColumnStrMeta()
+
+
+class ConditionOperator(StrEnum):
+    """Operators for conditions."""
+
+    EQ = "equals"
+    LT = "is less than"
+    LTE = "is less than or equals"
+    GT = "is greater than"
+    GTE = "is greater than or equals"
+    REGEX = "matches regex"
+
+
+class RowCondition(BaseModel):
+    """Condition for filtering DataFrame."""
+
+    column: str
+    operator: ConditionOperator
+    value: str
+    value_type: ValueType = ValueType.STRING
+    negate: bool = False
+
+    def summary(self) -> str:
+        """Provide a summary of the condition."""
+        negate_str = "not " if self.negate else ""
+        return f"{negate_str} {self.column} {self.operator.value} {self.value}"
 
 
 class BaseOperationModel(BaseModel):
