@@ -3,7 +3,7 @@
 # flake8: noqa: D103
 from __future__ import annotations
 
-from typing import Any, Type, cast
+from typing import Any, Type, cast, get_args
 
 import jinja2
 import streamlit as st
@@ -12,10 +12,10 @@ from pydantic_core import PydanticUndefined
 from streamlit_ace import st_ace
 
 from datarush.core.dataflow import Operation, Tableset
-from datarush.core.types import ColumnStr, ContentType, TableStr
+from datarush.core.types import ColumnStr, ColumnStrMeta, ContentType, TableStr
 from datarush.ui.state import get_dataflow
 from datarush.utils.jinja2 import render_jinja2_template
-from datarush.utils.type_utils import convert_to_type, is_string_enum, types_are_equal
+from datarush.utils.type_utils import convert_to_type, is_literal, is_string_enum, types_are_equal
 
 
 def operation_from_streamlit[T: Operation](
@@ -169,11 +169,19 @@ def model_dict_from_streamlit[T: BaseModel](
         elif field.annotation is ColumnStr or types_are_equal(field.annotation, list[ColumnStr]):
             if tableset:
                 relevant_tables = []
-                table = model_dict.get("table")
+
+                if field.metadata and isinstance(field.metadata[0], ColumnStrMeta):
+                    column_meta = field.metadata[0]
+                else:
+                    column_meta = ColumnStrMeta()
+
+                table = model_dict.get(column_meta.table_field)
                 if table:
                     relevant_tables.append(table)
 
-                tables = model_dict.get("tables")
+                tables = model_dict.get(column_meta.tables_field, []) + [
+                    model_dict.get(table_field) for table_field in column_meta.table_fields or []
+                ]
                 if tables:
                     relevant_tables.extend(tables)
 
@@ -198,6 +206,9 @@ def model_dict_from_streamlit[T: BaseModel](
                     value = st.multiselect(
                         options=current_value or [], default=current_value, **kwargs
                     )
+        elif is_literal(field.annotation):
+            options = list(get_args(field.annotation))
+            value = st.selectbox(options=options, **kwargs)
 
         elif is_string_enum(field.annotation):
             value = st.selectbox(options=list(field.annotation), **kwargs)  # type: ignore

@@ -10,7 +10,14 @@ from datarush.core.operations.sources import (
     s3_dataset_source,
     s3_object_source,
 )
-from datarush.core.operations.transformations import dropna, filter_row, select_columns, sort
+from datarush.core.operations.transformations import (
+    dropna,
+    filter_row,
+    group_by,
+    join,
+    select_columns,
+    sort,
+)
 
 _TITLE_TO_OPERATION_TYPE: dict[str, Type[Operation]] = {}
 _NAME_TO_OPERATION_TYPE: dict[str, Type[Operation]] = {}
@@ -49,6 +56,8 @@ for _op_type in [
     sort.SortByColumn,
     filter_row.FilterByColumn,
     select_columns.SelectColumns,
+    join.JoinTables,
+    group_by.GroupBy,
     # Sink
     s3_sink.S3ObjectSink,
     s3_dataset_sink.S3DatasetSink,
