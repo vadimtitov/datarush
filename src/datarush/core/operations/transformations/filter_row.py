@@ -3,17 +3,17 @@
 from pydantic import Field
 
 from datarush.core.dataflow import Operation, Tableset
-from datarush.core.types import BaseOperationModel, TableStr
-from datarush.utils.conditions import RowCondition, match_conditions
+from datarush.core.types import BaseOperationModel, ConditionGroup, TableStr
+from datarush.utils.conditions import match_conditions
 
 
 class FilterRowModel(BaseOperationModel):
     """Filter row operation model."""
 
     table: TableStr = Field(title="Table", description="Table to filter")
-    condition: RowCondition = Field(
-        title="Condition",
-        description="Condition to filter rows by",
+    conditions: ConditionGroup = Field(
+        title="Conditions",
+        description="Group of conditions to filter rows by",
     )
 
 
@@ -27,14 +27,19 @@ class FilterByColumn(Operation):
 
     def summary(self) -> str:
         """Provide operation summary."""
-        return f"Filter `{self.model.table}` where {self.model.condition.summary()}"
+        cols = {c.column for c in self.model.conditions.conditions}
+        return f"Filter `{self.model.table}` by {', '.join(cols)}"
 
     def operate(self, tableset: Tableset) -> Tableset:
         """Run operation."""
         table = self.model.table
         df = tableset.get_df(table)
 
-        mask = match_conditions(df, [self.model.condition])
+        mask = match_conditions(
+            df=df,
+            conditions=self.model.conditions.conditions,
+            combine=self.model.conditions.combine,
+        )
 
         tableset.set_df(table, df[mask])
         return tableset
