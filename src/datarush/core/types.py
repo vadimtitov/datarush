@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date, datetime
 from enum import StrEnum
-from typing import Any, Type
+from typing import Any, Literal, Type
 
 from pydantic import BaseModel, GetCoreSchemaHandler
 from pydantic.fields import FieldInfo
@@ -127,6 +127,13 @@ class RowCondition(BaseModel):
         """Provide a summary of the condition."""
         negate_str = "not " if self.negate else ""
         return f"{negate_str} {self.column} {self.operator.value} {self.value}"
+
+
+class ConditionGroup(BaseModel):
+    """Group of conditions for filtering DataFrame."""
+
+    conditions: list[RowCondition]
+    combine: Literal["and", "or"] = "and"
 
 
 class BaseOperationModel(BaseModel):
