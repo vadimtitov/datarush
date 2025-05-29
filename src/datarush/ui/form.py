@@ -3,7 +3,7 @@
 # flake8: noqa: D103
 from __future__ import annotations
 
-from typing import Any, Type, cast, get_args
+from typing import Any, Literal, Type, cast, get_args
 
 import jinja2
 import streamlit as st
@@ -12,8 +12,16 @@ from pydantic_core import PydanticUndefined
 from streamlit_ace import st_ace
 
 from datarush.core.dataflow import Operation, Tableset
-from datarush.core.types import ColumnStr, ColumnStrMeta, ContentType, TableStr
+from datarush.core.types import (
+    ColumnStr,
+    ColumnStrMeta,
+    ContentType,
+    RowConditionGroup,
+    TableStr,
+    ValueType,
+)
 from datarush.ui.state import get_dataflow
+from datarush.utils.conditions import ConditionOperator, RowCondition
 from datarush.utils.jinja2 import render_jinja2_template
 from datarush.utils.type_utils import convert_to_type, is_literal, is_string_enum, types_are_equal
 
@@ -168,26 +176,12 @@ def model_dict_from_streamlit[T: BaseModel](
 
         elif field.annotation is ColumnStr or types_are_equal(field.annotation, list[ColumnStr]):
             if tableset:
-                relevant_tables = []
-
-                if field.metadata and isinstance(field.metadata[0], ColumnStrMeta):
-                    column_meta = field.metadata[0]
-                else:
-                    column_meta = ColumnStrMeta()
-
-                table = model_dict.get(column_meta.table_field)
-                if table:
-                    relevant_tables.append(table)
-
-                tables = model_dict.get(column_meta.tables_field, []) + [
-                    model_dict.get(table_field) for table_field in column_meta.table_fields or []
-                ]
-                if tables:
-                    relevant_tables.extend(tables)
-
-                relevant_columns = sorted(
-                    {col for name in relevant_tables for col in tableset.get_df(name).columns}
+                relevant_columns = _get_relevant_columns(
+                    tableset=tableset,
+                    column_meta=ColumnStrMeta.from_pydantic_field(field),
+                    model_dict=model_dict,
                 )
+
                 if field.annotation is ColumnStr:
                     index = (
                         relevant_columns.index(current_value) if current_value is not None else 0
@@ -239,6 +233,31 @@ def model_dict_from_streamlit[T: BaseModel](
                 value=current_value if current_value is not None else default, step=0.01, **kwargs
             )
 
+        elif field.annotation is RowCondition:
+            relevant_columns = _get_relevant_columns(
+                tableset=tableset,
+                column_meta=ColumnStrMeta.from_pydantic_field(field),
+                model_dict=model_dict,
+            )
+            value = _condition_dict_from_streamlit(
+                column_options=relevant_columns,
+                current_dict=current_value,
+                key=kwargs["key"] + "single_condition",
+                advanced_mode=advanced_mode,
+            )
+
+        elif field.annotation is RowConditionGroup:
+            relevant_columns = _get_relevant_columns(
+                tableset=tableset,
+                column_meta=ColumnStrMeta.from_pydantic_field(field),
+                model_dict=model_dict,
+            )
+            value = _condition_group_dict_from_streamlit(
+                column_options=relevant_columns,
+                current_dict=current_value,
+                key=kwargs["key"] + "_condition_group",
+                advanced_mode=advanced_mode,
+            )
         else:
             raise TypeError(f"Not supported type: {field.annotation}")
 
@@ -250,3 +269,187 @@ def model_dict_from_streamlit[T: BaseModel](
         schema.model_validate(model_dict)
 
     return model_dict
+
+
+def _get_relevant_columns(
+    tableset: Tableset | None = None,
+    column_meta: ColumnStrMeta | None = None,
+    model_dict: dict[str, Any] | None = None,
+) -> list[str]:
+    """Get relevant columns from the tableset based on the column metadata."""
+    if not tableset:
+        return []
+
+    relevant_tables = []
+    column_meta = column_meta or ColumnStrMeta()
+    model_dict = model_dict or {}
+
+    table = model_dict.get(column_meta.table_field)
+    if table:
+        relevant_tables.append(table)
+
+    tables = model_dict.get(column_meta.tables_field, []) + [
+        model_dict.get(table_field) for table_field in column_meta.table_fields or []
+    ]
+    if tables:
+        relevant_tables.extend(tables)
+
+    relevant_columns = sorted(
+        {col for name in relevant_tables for col in tableset.get_df(name).columns}
+    )
+
+    return relevant_columns
+
+
+def _condition_dict_from_streamlit(
+    column_options: list[str],
+    current_dict: dict[str, Any] | None = None,
+    key: int | str | None = None,
+    advanced_mode: bool = False,
+    show_remove_button: bool = False,
+) -> dict | Literal[False] | None:
+    """Render a condition form in Streamlit and return the condition dictionary.
+
+    Returns:
+        dict | Literal[False] | None: The condition dictionary if valid, False if removed, or None if invalid.
+    """
+    current_dict = current_dict or {}
+    curr_column = current_dict.get("column")
+    curr_operator = current_dict.get("operator")
+    curr_value = current_dict.get("value")
+    curr_value_type = current_dict.get("value_type")
+    curr_negate = current_dict.get("negate", False)
+
+    with st.container(border=True, key=key):
+        st.write("Condition")
+
+        # Layout
+        col_area, operator_area = st.columns([2, 1])
+        value_area, value_type_area = st.columns([2, 1])
+        negate_area, remove_area = st.columns([8, 1])
+
+        # Column
+        column_options = column_options or [curr_column] if curr_column else []
+        column = col_area.selectbox(
+            "Column",
+            options=column_options,
+            key=f"{key}_column_select",
+            index=column_options.index(curr_column) if curr_column else 0,
+        )
+
+        # Operator
+        operator_options = list(ConditionOperator)
+        operator = ConditionOperator(
+            operator_area.selectbox(
+                "Operator",
+                options=operator_options,
+                key=f"{key}_operator",
+                index=operator_options.index(curr_operator) if curr_operator else 0,
+            )
+        )
+
+        # Value
+        value = value_area.text_input("Value", key=f"{key}_value", value=curr_value)
+
+        # Value Type
+        type_options = list(ValueType)
+        value_type = ValueType(
+            value_type_area.selectbox(
+                "Type",
+                options=type_options,
+                key=f"{key}_value_type",
+                index=type_options.index(curr_value_type) if curr_value_type else 0,
+            )
+        )
+
+        # Negate
+        negate = negate_area.checkbox("Negate", key=f"{key}_negate", value=curr_negate)
+
+        # Remove button
+        if show_remove_button:
+            if remove_area.button(
+                "", key=f"{key}_remove_condition", help="Remove", icon=":material/close:"
+            ):
+                return False
+
+        try:
+            res = RowCondition(
+                column=column,
+                operator=operator,
+                value=value,  # type: ignore
+                value_type=value_type,
+                negate=negate,
+            ).model_dump()
+            return res
+        except ValidationError as e:
+            return None
+
+
+def _condition_group_dict_from_streamlit(
+    column_options: list[str],
+    current_dict: dict[str, Any] | None = None,
+    key: int | str | None = None,
+    advanced_mode: bool = False,
+) -> dict | None:
+    """Render a condition group form in Streamlit and return the condition group dictionary.
+
+    This currently utilizes st.session_state to store conditions state
+    which has a few problems and should be refactored in the future.
+    """
+    current_dict = current_dict or {}
+
+    if f"{key}_conditions" not in st.session_state:
+        st.session_state[f"{key}_conditions"] = current_dict.get("conditions", [])
+
+    current_combine = current_dict.get("combine", "and")
+    conditions = st.session_state[f"{key}_conditions"]
+
+    with st.container(border=True, key=f"{key}_container_conditions"):
+        st.write("Conditions")
+        combine: Literal["and", "or"] = st.selectbox(
+            "Combine",
+            options=["and", "or"],
+            index=1 if current_combine == "or" else 0,
+            key=f"{key}_combine",
+        )
+
+        updated_conditions = []
+        for i, current_condition in enumerate(conditions):
+            with st.container(key=f"{key}_condition_{i}_container"):
+                condition = _condition_dict_from_streamlit(
+                    column_options=column_options,
+                    current_dict=current_condition,
+                    key=f"{key}_condition_{i}",
+                    advanced_mode=advanced_mode,
+                    show_remove_button=True,
+                )
+                if condition:
+                    updated_conditions.append(condition)
+
+                if condition is False:
+                    st.session_state[f"{key}_conditions"].pop(i)
+                    st.rerun()
+
+        # Update session state with modified conditions
+        st.session_state[f"{key}_conditions"] = updated_conditions
+
+        if st.button("Add Condition", key=f"{key}_add_condition"):
+            # Add a new condition to the session state
+            new_condition = RowCondition(
+                column=column_options[0] if column_options else "",
+                operator=ConditionOperator.EQ,
+                value="",
+                value_type=ValueType.STRING,
+                negate=False,
+            ).model_dump()
+            st.session_state[f"{key}_conditions"].append(new_condition)
+            st.rerun()
+
+    try:
+        res = RowConditionGroup(
+            combine=combine,
+            conditions=st.session_state[f"{key}_conditions"],
+        ).model_dump()
+        return res
+    except ValidationError as e:
+        return None
