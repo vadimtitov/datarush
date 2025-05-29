@@ -15,8 +15,8 @@ from datarush.core.dataflow import Operation, Tableset
 from datarush.core.types import (
     ColumnStr,
     ColumnStrMeta,
-    ConditionGroup,
     ContentType,
+    RowConditionGroup,
     TableStr,
     ValueType,
 )
@@ -246,7 +246,7 @@ def model_dict_from_streamlit[T: BaseModel](
                 advanced_mode=advanced_mode,
             )
 
-        elif field.annotation is ConditionGroup:
+        elif field.annotation is RowConditionGroup:
             relevant_columns = _get_relevant_columns(
                 tableset=tableset,
                 column_meta=ColumnStrMeta.from_pydantic_field(field),
@@ -446,7 +446,7 @@ def _condition_group_dict_from_streamlit(
             st.rerun()
 
     try:
-        res = ConditionGroup(
+        res = RowConditionGroup(
             combine=combine,
             conditions=st.session_state[f"{key}_conditions"],
         ).model_dump()

@@ -3,7 +3,7 @@
 from pydantic import Field
 
 from datarush.core.dataflow import Operation, Tableset
-from datarush.core.types import BaseOperationModel, ConditionGroup, TableStr
+from datarush.core.types import BaseOperationModel, RowConditionGroup, TableStr
 from datarush.utils.conditions import match_conditions
 
 
@@ -11,7 +11,7 @@ class FilterRowModel(BaseOperationModel):
     """Filter row operation model."""
 
     table: TableStr = Field(title="Table", description="Table to filter")
-    conditions: ConditionGroup = Field(
+    conditions: RowConditionGroup = Field(
         title="Conditions",
         description="Group of conditions to filter rows by",
     )

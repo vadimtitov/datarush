@@ -129,7 +129,7 @@ class RowCondition(BaseModel):
         return f"{negate_str} {self.column} {self.operator.value} {self.value}"
 
 
-class ConditionGroup(BaseModel):
+class RowConditionGroup(BaseModel):
     """Group of conditions for filtering DataFrame."""
 
     conditions: list[RowCondition]
