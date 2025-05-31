@@ -27,7 +27,7 @@ To launch the DataRush user interface, follow these steps:
 
 1. Create a `run_ui.py` file to serve as the entry point for the Streamlit application:
     ```python
-    from datarush import run_ui
+    from datarush.ui import run_ui
 
     if __name__ == "__main__":
         run_ui()

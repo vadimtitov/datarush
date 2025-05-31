@@ -40,6 +40,7 @@ def sidebar_section(pages: list[StreamlitPage]) -> None:
 
     if selected_template != OPTION_CREATE_NEW_TEMPLATE:
         versions = template_manager.list_template_versions(selected_template)
+        versions.sort(reverse=True)
 
         param_version = _get_query_param("version")
 

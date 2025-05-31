@@ -1,3 +1,5 @@
+from typing import Any
+
 import pandas as pd
 import pytest
 from pydantic import Field
@@ -38,7 +40,6 @@ class MockOperation(Operation):
         )
 
     def operate(self, tableset: Tableset) -> Tableset:
-        """Run operation."""
         self.called = True
         return tableset
 
@@ -141,3 +142,84 @@ def test_dataflow_run():
     dataflow = Dataflow(operations=[operation])
     dataflow.run()
     assert operation.called
+
+
+def test_dataflow_run_with_cache():
+    # Prepare mock operations
+    class MockOperationWithCache(Operation):
+        """Mock operation with caching."""
+
+        name = "mock_operation_with_cache"
+        title = "Mock Operation With Cache"
+        description = "Mocking the operation for testing with cache"
+
+        model: MockModel
+
+        def __init__(self, model_dict: dict[str, Any], advanced_mode: bool = False) -> None:
+            super().__init__(model_dict, advanced_mode)
+            self.called_count = 0
+
+        def summary(self) -> str:
+            """Provide summary."""
+            return "Mock operation summary"
+
+        def operate(self, tableset: Tableset) -> Tableset:
+            self.called_count += 1
+            return tableset
+
+    operation1 = MockOperationWithCache(
+        model_dict={
+            "table": "mock_table_1",
+            "column": "mock_column_1",
+            "arbitrary": "mock_value_1",
+        }
+    )
+    operation2 = MockOperationWithCache(
+        model_dict={
+            "table": "mock_table_2",
+            "column": "mock_column_2",
+            "arbitrary": "mock_value_2",
+        }
+    )
+    operation3 = MockOperationWithCache(
+        model_dict={
+            "table": "mock_table_3",
+            "column": "mock_column_3",
+            "arbitrary": "mock_value_3",
+        }
+    )
+
+    # Create a dataflow with the first operation
+    dataflow = Dataflow(operations=[operation1])
+    dataflow.run_with_cache()
+    assert operation1.called_count == 1
+    assert operation2.called_count == 0
+
+    # Appending new operation does not re-run the first operation
+    dataflow.add_operation(operation2)
+    dataflow.run_with_cache()
+    assert operation1.called_count == 1  # Cached result used
+    assert operation2.called_count == 1  # New operation called
+
+    # Changing parameter
+    dataflow.add_parameter(
+        ParameterSpec(name="param1", type="string", description="", default="value", required=True)
+    )
+    dataflow.set_parameter_value("param1", "new_value")
+    dataflow.run_with_cache()
+    assert operation1.called_count == 2
+    assert operation2.called_count == 2
+
+    # Adding a third operation
+    dataflow.add_operation(operation3)
+    dataflow.run_with_cache()
+    assert operation1.called_count == 2
+    assert operation2.called_count == 2
+    assert operation3.called_count == 1
+
+    # Swapping operations
+    dataflow.move_operation(2, 1)
+    dataflow.run_with_cache()
+    assert operation1.called_count == 2
+    assert operation2.called_count == 3
+    assert operation3.called_count == 2
