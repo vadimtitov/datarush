@@ -267,7 +267,6 @@ class Dataflow:
             if cache_valid and cache_info and cache_info.cache == input_hash:
                 self._current_tableset = cache_info.tableset.copy()
             else:
-                print(f"Running operation {idx}: {operation.name} with input hash: {input_hash}")
                 self._current_tableset = operation.operate(self._current_tableset)
                 self._operation_cache[idx] = _CacheTuple(input_hash, self._current_tableset.copy())
                 cache_valid = False
