@@ -9,4 +9,4 @@ from datarush.ui import run_ui
 
 
 if __name__ == "__main__":
-    run_ui(lambda: print("DataRush UI initialized!"))
+    run_ui()

@@ -3,13 +3,28 @@
 import argparse
 from typing import Any
 
+from datarush.config import DatarushConfig, set_datarush_config
 from datarush.core.templates import get_template_manager, template_to_dataflow
 from datarush.core.types import ParameterSpec
 from datarush.utils.type_utils import convert_to_type
 
 
-def run_template(name: str, version: str, parameters: dict[str, Any] | None = None) -> None:
-    """Run a template by its name and version."""
+def run_template(
+    name: str,
+    version: str,
+    parameters: dict[str, Any] | None = None,
+    config: DatarushConfig | None = None,
+) -> None:
+    """Run a template by its name and version.
+
+    Args:
+        name: Name of the template to run.
+        version: Version of the template to run.
+        parameters: Optional dictionary of parameter values to set for the template.
+        config: Optional DatarushConfig to use. If not provided, the default configuration is loaded from environment variables.
+    """
+    set_datarush_config(config)
+
     template = get_template_manager().read_template(name, version)
     dataflow = template_to_dataflow(template)
     if parameters:
@@ -20,8 +35,14 @@ def run_template(name: str, version: str, parameters: dict[str, Any] | None = No
     dataflow.run()
 
 
-def run_template_from_command_line() -> None:
-    """Run a template using command-line arguments."""
+def run_template_from_command_line(config: DatarushConfig | None = None) -> None:
+    """Run a template using command-line arguments.
+
+    Args:
+        config: Optional DatarushConfig to use. If not provided, the default configuration is loaded from environment variables.
+    """
+    set_datarush_config(config)
+
     argparser = argparse.ArgumentParser(description="Datarush Template Runner")
 
     argparser.add_argument(

@@ -5,7 +5,7 @@ from __future__ import annotations
 import pandas as pd
 from pydantic import BaseModel, Field
 
-from datarush.config import S3Config
+from datarush.config import get_datarush_config
 from datarush.core.dataflow import Operation, Tableset
 from datarush.core.types import ContentType
 from datarush.utils.s3_client import DatasetDoesNotExistError, S3Dataset
@@ -33,10 +33,6 @@ class S3DatasetSource(Operation):
     description = "Download dataset from S3"
     model: S3DatasetSourceModel
 
-    def initialize(self) -> None:
-        """Initialize the operation."""
-        self._config = S3Config.fromenv()
-
     def summary(self) -> str:
         """Provide operation summary."""
         return f"Load S3 dataset as `{self.model.table_name}` table"
@@ -47,7 +43,7 @@ class S3DatasetSource(Operation):
             bucket=self.model.bucket,
             prefix=self.model.path,
             content_type=self.model.content_type,
-            config=self._config,
+            config=get_datarush_config().s3,
         )
         try:
             df = dataset.read()

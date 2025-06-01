@@ -1,11 +1,17 @@
 """Application config."""
 
+from contextvars import ContextVar
+from dataclasses import dataclass
 from enum import StrEnum
+from functools import cached_property
+from typing import Callable
 
 from dotenv import load_dotenv
 from envarify import AnyHttpUrl, BaseConfig, EnvVar, SecretString
 
-load_dotenv()
+from datarush.core.dataflow import Operation
+
+load_dotenv(override=False)
 
 
 ################################
@@ -13,6 +19,7 @@ load_dotenv()
 ################################
 
 
+@dataclass(frozen=True)
 class S3Config(BaseConfig):
     """S3 Configuration."""
 
@@ -72,8 +79,61 @@ class TemplateStoreConfig(BaseConfig):
 ################################
 
 
-class AppConfig(BaseConfig):
-    """Application Configuration."""
+class DatarushConfig:
+    """Datarush application configuration."""
 
-    s3: S3Config
-    template_store: TemplateStoreConfig
+    def __init__(
+        self,
+        custom_operations: list[type[Operation]] | None = None,
+        s3_config_factory: Callable[[], S3Config] | None = None,
+    ) -> None:
+        """
+        Initialize the Datarush configuration.
+
+        Args:
+            custom_operations: List of custom operations to be registered.
+            s3_config_factory: Optional factory function to create S3Config.
+        """
+        self._custom_operations = custom_operations or []
+        self._s3_config_factory = s3_config_factory
+
+    @property
+    def custom_operations(self) -> list[type[Operation]]:
+        """Custom operations."""
+        return self._custom_operations
+
+    @cached_property
+    def s3(self) -> S3Config:
+        """Get S3 configuration."""
+        if self._s3_config_factory is not None:
+            return self._s3_config_factory()
+        return S3Config.fromenv()
+
+    @cached_property
+    def template_store(self) -> TemplateStoreConfig:
+        """Get template store configuration."""
+        return TemplateStoreConfig.fromenv()
+
+
+_config_var = ContextVar[DatarushConfig]("config")
+
+
+def set_datarush_config(config: DatarushConfig | None = None) -> None:
+    """Set the Datarush configuration."""
+    config = config or DatarushConfig()
+
+    _config_var.set(config)
+
+    from datarush.core.operations import register_operation_type
+
+    for operation in config.custom_operations:
+        register_operation_type(operation)
+
+
+def get_datarush_config() -> DatarushConfig:
+    """Get the current Datarush configuration."""
+    try:
+        return _config_var.get()
+    except LookupError:
+        set_datarush_config()
+        return _config_var.get()
