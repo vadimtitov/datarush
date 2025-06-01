@@ -14,11 +14,11 @@ def run_ui(config: DatarushConfig | None = None) -> None:
         config: Optional injectable DatarushConfig to use.
             If not provided, the default configuration is loaded from environment variables.
     """
+    st.set_page_config(layout="wide")
+
     if not st.session_state.get("session_initialized", False):
         set_datarush_config(config)
         st.session_state["session_initialized"] = True
-
-    st.set_page_config(layout="wide")
 
     pages = [
         st.Page(parameters.parameters_page, title="Parameters"),
