@@ -9,7 +9,7 @@ import boto3
 import pandas as pd
 from botocore.client import Config
 
-from datarush.config import S3Config
+from datarush.config import S3Config, get_datarush_config
 from datarush.core.types import ContentType
 
 
@@ -22,7 +22,7 @@ class S3Client:
 
     def __init__(self, config: S3Config | None = None) -> None:
         """Initialize the S3 client with configuration."""
-        config = config or S3Config.fromenv()
+        config = config or get_datarush_config().s3
         self._client = boto3.client(
             "s3",
             endpoint_url=config.endpoint,
@@ -89,7 +89,7 @@ class S3Dataset:
         self._partition_columns = partition_columns or []
         self._unique_ids = unique_ids or []
 
-        self._config = config or S3Config.fromenv()
+        self._config = config or get_datarush_config().s3
         self._session = boto3.Session(
             aws_access_key_id=self._config.access_key,
             aws_secret_access_key=self._config.secret_key.reveal(),

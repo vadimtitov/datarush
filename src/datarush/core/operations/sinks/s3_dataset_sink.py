@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pydantic import Field
 
-from datarush.config import S3Config
+from datarush.config import get_datarush_config
 from datarush.core.dataflow import Operation, Tableset
 from datarush.core.types import BaseOperationModel, ColumnStr, ContentType, TableStr
 from datarush.utils.s3_client import DatasetWriteMode, S3Dataset
@@ -36,10 +36,6 @@ class S3DatasetSink(Operation):
     description = "Write table as S3 dataset"
     model: S3DatasetSinkModel
 
-    def initialize(self) -> None:
-        """Initialize the operation."""
-        self._config = S3Config.fromenv()
-
     def summary(self) -> str:
         """Return a short summary of the operation."""
         path = f"{self.model.bucket}/{self.model.path.strip('/')}"
@@ -57,7 +53,7 @@ class S3DatasetSink(Operation):
             partition_columns=self.model.partition_columns,
             unique_ids=self.model.unique_ids,
             write_mode=self.model.mode,
-            config=self._config,
+            config=get_datarush_config().s3,
         )
         df = tableset.get_df(self.model.table)
         dataset.write(df)

@@ -10,8 +10,8 @@ from typing import Any, TypedDict, cast
 from datarush.config import (
     FilesystemTemplateStoreConfig,
     S3TemplateStoreConfig,
-    TemplateStoreConfig,
     TemplateStoreType,
+    get_datarush_config,
 )
 from datarush.core.dataflow import Dataflow, Operation
 from datarush.core.operations import get_operation_type_by_name
@@ -69,7 +69,7 @@ class S3TemplateManager(TemplateManager):
 
     def __init__(self, config: S3TemplateStoreConfig | None = None):
         """Initialize the S3 template manager."""
-        config = config or S3TemplateStoreConfig.fromenv()
+        config = config or get_datarush_config().template_store.s3
         self._s3 = S3Client()
         self._bucket = config.bucket
         self._prefix = config.prefix
@@ -106,7 +106,7 @@ class FilesystemTemplateManager(TemplateManager):
 
     def __init__(self, config: FilesystemTemplateStoreConfig | None = None):
         """Initialize the filesystem template manager."""
-        config = config or FilesystemTemplateStoreConfig.fromenv()
+        config = config or get_datarush_config().template_store.filesystem
         self._path = config.path
 
     def list_templates(self) -> list[str]:
@@ -160,7 +160,7 @@ class FilesystemTemplateManager(TemplateManager):
 @cache
 def get_template_manager() -> TemplateManager:
     """Get the configured template manager."""
-    config = TemplateStoreConfig.fromenv()
+    config = get_datarush_config().template_store
 
     if config.store_type == TemplateStoreType.FILESYSTEM:
         return FilesystemTemplateManager(config.filesystem)

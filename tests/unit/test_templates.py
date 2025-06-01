@@ -3,6 +3,7 @@ from unittest.mock import patch
 import pytest
 from pydantic import Field
 
+from datarush.config import FilesystemTemplateStoreConfig, S3TemplateStoreConfig
 from datarush.core.dataflow import Dataflow, Operation, Tableset
 from datarush.core.operations import register_operation_type
 from datarush.core.templates import (
@@ -72,7 +73,9 @@ def mock_s3_client():
 
 @patch("datarush.core.templates.S3Client.list_folders", return_value=["template1", "template2"])
 def test_s3_template_manager_list_templates(mock_list_folders):
-    manager = S3TemplateManager()
+    manager = S3TemplateManager(
+        config=S3TemplateStoreConfig(bucket="sample-bucket", prefix="datarush")
+    )
     templates = manager.list_templates()
     assert templates == ["template1", "template2"]
 
@@ -83,7 +86,7 @@ def test_filesystem_template_manager_list_templates(tmp_path):
     (templates_path / "template1").mkdir()
     (templates_path / "template2").mkdir()
 
-    manager = FilesystemTemplateManager()
+    manager = FilesystemTemplateManager(config=FilesystemTemplateStoreConfig(path="."))
     manager._path = str(tmp_path)
     templates = manager.list_templates()
     assert sorted(templates) == ["template1", "template2"]
