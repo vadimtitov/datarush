@@ -15,6 +15,7 @@ from datarush.core.operations.transformations import (
     filter_row,
     group_by,
     join,
+    pivot_table,
     select_columns,
     sort,
 )
@@ -58,6 +59,7 @@ for _op_type in [
     select_columns.SelectColumns,
     join.JoinTables,
     group_by.GroupBy,
+    pivot_table.PivotTable,
     # Sink
     s3_sink.S3ObjectSink,
     s3_dataset_sink.S3DatasetSink,
