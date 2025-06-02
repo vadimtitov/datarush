@@ -15,10 +15,12 @@ from datarush.core.operations.transformations import (
     filter_row,
     group_by,
     join,
+    melt_table,
     pivot_table,
     select_columns,
+    set_header,
     sort,
-    melt_table,
+    unset_header,
 )
 
 _TITLE_TO_OPERATION_TYPE: dict[str, Type[Operation]] = {}
@@ -62,6 +64,8 @@ for _op_type in [
     group_by.GroupBy,
     pivot_table.PivotTable,
     melt_table.Melt,
+    set_header.SetHeader,
+    unset_header.UnsetHeader,
     # Sink
     s3_sink.S3ObjectSink,
     s3_dataset_sink.S3DatasetSink,
