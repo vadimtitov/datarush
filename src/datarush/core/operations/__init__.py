@@ -11,6 +11,7 @@ from datarush.core.operations.sources import (
     s3_object_source,
 )
 from datarush.core.operations.transformations import (
+    astype,
     dropna,
     filter_row,
     group_by,
@@ -56,6 +57,7 @@ for _op_type in [
     s3_object_source.S3ObjectSource,
     s3_dataset_source.S3DatasetSource,
     # Transform
+    astype.AsType,
     dropna.DropNaValues,
     sort.SortByColumn,
     filter_row.FilterByColumn,
