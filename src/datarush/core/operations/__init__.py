@@ -12,6 +12,7 @@ from datarush.core.operations.sources import (
 )
 from datarush.core.operations.transformations import (
     astype,
+    calculate,
     dropna,
     filter_row,
     group_by,
@@ -68,6 +69,7 @@ for _op_type in [
     melt_table.Melt,
     set_header.SetHeader,
     unset_header.UnsetHeader,
+    calculate.Calculate,
     # Sink
     s3_sink.S3ObjectSink,
     s3_dataset_sink.S3DatasetSink,
