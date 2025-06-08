@@ -72,11 +72,15 @@ class DataflowUI(Dataflow):
         self._operations.pop(position)
         self._invalidate_cache_from(position)
 
-    def get_tableset_at_operation(self, operation_index: int) -> Tableset:
-        """Get tableset at the specified operation index."""
+    def get_tableset_after_operation(self, operation_index: int) -> Tableset | None:
+        """Get tableset computed after operation at index or None if not computed yet."""
         if operation_index < 0 or operation_index >= len(self._operations):
             raise IndexError("operation_index is out of range")
-        return self._operation_cache.get(operation_index, _CacheTuple("", Tableset([]))).tableset
+
+        if operation_index not in self._operation_cache:
+            return None
+
+        return self._operation_cache[operation_index].tableset
 
     def run(self) -> None:
         """Run dataflow with caching of operation results.

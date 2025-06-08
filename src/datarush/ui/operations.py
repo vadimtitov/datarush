@@ -56,8 +56,12 @@ def show_operations() -> None:
             truncate(op.summary(), max_len=200) if not op.advanced_mode else op.description
         )
 
+        relevant_tableset = (
+            dataflow.get_tableset_after_operation(i - 1) if i > 0 else dataflow.current_tableset
+        ) or dataflow.current_tableset
+
         with st.expander(op_summary if op.is_enabled else crossed_out(op_summary), expanded=False):
-            if update_operation_from_streamlit(op, tableset=dataflow.current_tableset, key=i):
+            if update_operation_from_streamlit(op, tableset=relevant_tableset, key=i):
                 st.rerun()
 
             cols = st.columns([8, 1, 1, 1, 1, 1])
