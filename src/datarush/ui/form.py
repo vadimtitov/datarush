@@ -183,6 +183,10 @@ def model_dict_from_streamlit[T: BaseModel](
                 )
 
                 if field.annotation is ColumnStr:
+                    if (
+                        current_value is not None and current_value not in relevant_columns
+                    ):  #  if header changes
+                        relevant_columns = [current_value] + relevant_columns
                     index = (
                         relevant_columns.index(current_value) if current_value is not None else 0
                     )
@@ -295,7 +299,8 @@ def _get_relevant_columns(
         relevant_tables.extend(tables)
 
     relevant_columns = sorted(
-        {col for name in relevant_tables for col in tableset.get_df(name).columns}
+        {col for name in relevant_tables for col in tableset.get_df(name).columns},
+        key=lambda x: str(x),
     )
 
     return relevant_columns

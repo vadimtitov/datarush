@@ -11,12 +11,23 @@ from datarush.core.operations.sources import (
     s3_object_source,
 )
 from datarush.core.operations.transformations import (
+    astype,
+    calculate,
+    calculate_hash,
+    copy_column,
+    copy_table,
+    derive_column,
     dropna,
     filter_row,
     group_by,
     join,
+    melt_table,
+    pivot_table,
     select_columns,
+    set_header,
     sort,
+    transpose,
+    unset_header,
 )
 
 _TITLE_TO_OPERATION_TYPE: dict[str, Type[Operation]] = {}
@@ -52,12 +63,23 @@ for _op_type in [
     s3_object_source.S3ObjectSource,
     s3_dataset_source.S3DatasetSource,
     # Transform
+    astype.AsType,
     dropna.DropNaValues,
     sort.SortByColumn,
     filter_row.FilterByColumn,
     select_columns.SelectColumns,
     join.JoinTables,
     group_by.GroupBy,
+    pivot_table.PivotTable,
+    melt_table.Melt,
+    set_header.SetHeader,
+    unset_header.UnsetHeader,
+    calculate.Calculate,
+    copy_column.CopyColumn,
+    copy_table.CopyTable,
+    transpose.Transpose,
+    derive_column.DeriveColumn,
+    calculate_hash.CalculateHash,
     # Sink
     s3_sink.S3ObjectSink,
     s3_dataset_sink.S3DatasetSink,
