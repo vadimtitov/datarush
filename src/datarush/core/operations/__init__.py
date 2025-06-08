@@ -15,6 +15,7 @@ from datarush.core.operations.transformations import (
     calculate,
     copy_column,
     copy_table,
+    derive_column,
     dropna,
     filter_row,
     group_by,
@@ -76,6 +77,7 @@ for _op_type in [
     copy_column.CopyColumn,
     copy_table.CopyTable,
     transpose.Transpose,
+    derive_column.DeriveColumn,
     # Sink
     s3_sink.S3ObjectSink,
     s3_dataset_sink.S3DatasetSink,
