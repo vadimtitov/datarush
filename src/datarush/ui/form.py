@@ -299,7 +299,8 @@ def _get_relevant_columns(
         relevant_tables.extend(tables)
 
     relevant_columns = sorted(
-        {col for name in relevant_tables for col in tableset.get_df(name).columns}
+        {col for name in relevant_tables for col in tableset.get_df(name).columns},
+        key=lambda x: str(x),
     )
 
     return relevant_columns

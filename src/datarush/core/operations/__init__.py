@@ -24,6 +24,7 @@ from datarush.core.operations.transformations import (
     select_columns,
     set_header,
     sort,
+    transpose,
     unset_header,
 )
 
@@ -74,6 +75,7 @@ for _op_type in [
     calculate.Calculate,
     copy_column.CopyColumn,
     copy_table.CopyTable,
+    transpose.Transpose,
     # Sink
     s3_sink.S3ObjectSink,
     s3_dataset_sink.S3DatasetSink,
