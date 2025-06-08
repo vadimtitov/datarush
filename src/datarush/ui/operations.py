@@ -22,7 +22,7 @@ def operations_page() -> None:
         show_add_operation_ui()
 
         if st.button("Run Operations"):
-            get_dataflow().run_with_cache()
+            get_dataflow().run()
             st.rerun()
 
 

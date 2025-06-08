@@ -7,6 +7,7 @@ from pydantic import Field
 from datarush.core.dataflow import Dataflow, Operation, Table, Tableset
 from datarush.core.types import BaseOperationModel, ColumnStr, ParameterSpec, TableStr
 from datarush.exceptions import UnknownTableError
+from datarush.ui.state import DataflowUI
 
 ########################
 ####### FIXTURES #######
@@ -110,16 +111,6 @@ def test_dataflow_initialization():
     assert dataflow.operations == []
 
 
-def test_dataflow_add_parameter():
-    param = ParameterSpec(
-        name="param1", type="string", description="", default="value", required=True
-    )
-    dataflow = Dataflow()
-    dataflow.add_parameter(param)
-    assert len(dataflow.parameters) == 1
-    assert dataflow.parameters[0].name == "param1"
-
-
 def test_dataflow_set_parameter_value():
     param = ParameterSpec(
         name="param1", type="string", description="", default="value", required=True
@@ -129,14 +120,6 @@ def test_dataflow_set_parameter_value():
     assert dataflow.get_current_context()["parameters"]["param1"] == "new_value"
 
 
-def test_dataflow_add_operation():
-    operation = MOCK_OPERATION
-    dataflow = Dataflow()
-    dataflow.add_operation(operation)
-    assert len(dataflow.operations) == 1
-    assert dataflow.operations[0] is operation
-
-
 def test_dataflow_run():
     operation = MOCK_OPERATION
     dataflow = Dataflow(operations=[operation])
@@ -144,7 +127,25 @@ def test_dataflow_run():
     assert operation.called
 
 
-def test_dataflow_run_with_cache():
+def test_dataflow_ui_add_parameter():
+    param = ParameterSpec(
+        name="param1", type="string", description="", default="value", required=True
+    )
+    dataflow = DataflowUI()
+    dataflow.add_parameter(param)
+    assert len(dataflow.parameters) == 1
+    assert dataflow.parameters[0].name == "param1"
+
+
+def test_dataflow_ui_add_operation():
+    operation = MOCK_OPERATION
+    dataflow = DataflowUI()
+    dataflow.add_operation(operation)
+    assert len(dataflow.operations) == 1
+    assert dataflow.operations[0] is operation
+
+
+def test_dataflow_ui_run():
     # Prepare mock operations
     class MockOperationWithCache(Operation):
         """Mock operation with caching."""
@@ -190,14 +191,14 @@ def test_dataflow_run_with_cache():
     )
 
     # Create a dataflow with the first operation
-    dataflow = Dataflow(operations=[operation1])
-    dataflow.run_with_cache()
+    dataflow = DataflowUI(operations=[operation1])
+    dataflow.run()
     assert operation1.called_count == 1
     assert operation2.called_count == 0
 
     # Appending new operation does not re-run the first operation
     dataflow.add_operation(operation2)
-    dataflow.run_with_cache()
+    dataflow.run()
     assert operation1.called_count == 1  # Cached result used
     assert operation2.called_count == 1  # New operation called
 
@@ -206,20 +207,20 @@ def test_dataflow_run_with_cache():
         ParameterSpec(name="param1", type="string", description="", default="value", required=True)
     )
     dataflow.set_parameter_value("param1", "new_value")
-    dataflow.run_with_cache()
+    dataflow.run()
     assert operation1.called_count == 2
     assert operation2.called_count == 2
 
     # Adding a third operation
     dataflow.add_operation(operation3)
-    dataflow.run_with_cache()
+    dataflow.run()
     assert operation1.called_count == 2
     assert operation2.called_count == 2
     assert operation3.called_count == 1
 
     # Swapping operations
     dataflow.move_operation(2, 1)
-    dataflow.run_with_cache()
+    dataflow.run()
     assert operation1.called_count == 2
     assert operation2.called_count == 3
     assert operation3.called_count == 2

@@ -13,9 +13,8 @@ def raw_template_page() -> None:
     """Render the save page with template JSON viewer."""
     st.subheader("Template JSON")
 
-    dataflow = get_dataflow()
-
-    template = dataflow_to_template(dataflow)
+    dataflow_ui = get_dataflow()
+    template = dataflow_to_template(dataflow_ui)
 
     raw_template_str = st_ace(
         json.dumps(template, indent=4),
