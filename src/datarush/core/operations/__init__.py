@@ -13,6 +13,7 @@ from datarush.core.operations.sources import (
 from datarush.core.operations.transformations import (
     astype,
     calculate,
+    calculate_hash,
     copy_column,
     copy_table,
     derive_column,
@@ -78,6 +79,7 @@ for _op_type in [
     copy_table.CopyTable,
     transpose.Transpose,
     derive_column.DeriveColumn,
+    calculate_hash.CalculateHash,
     # Sink
     s3_sink.S3ObjectSink,
     s3_dataset_sink.S3DatasetSink,
