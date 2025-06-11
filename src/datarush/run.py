@@ -4,6 +4,7 @@ import argparse
 from typing import Any
 
 from datarush.config import DatarushConfig, set_datarush_config
+from datarush.core.operations import register_operation_type
 from datarush.core.templates import get_template_manager, template_to_dataflow
 from datarush.core.types import ParameterSpec
 from datarush.utils.type_utils import convert_to_type
@@ -23,7 +24,7 @@ def run_template(
         parameters: Optional dictionary of parameter values to set for the template.
         config: Optional DatarushConfig to use. If not provided, the default configuration is loaded from environment variables.
     """
-    set_datarush_config(config)
+    _setup(config)
 
     template = get_template_manager().read_template(name, version)
     dataflow = template_to_dataflow(template)
@@ -41,7 +42,7 @@ def run_template_from_command_line(config: DatarushConfig | None = None) -> None
     Args:
         config: Optional DatarushConfig to use. If not provided, the default configuration is loaded from environment variables.
     """
-    set_datarush_config(config)
+    _setup(config)
 
     argparser = argparse.ArgumentParser(description="Datarush Template Runner")
 
@@ -88,3 +89,13 @@ def _parse_parameter_values_from_specs(
         )
         for spec in parameter_specs
     }
+
+
+def _setup(config: DatarushConfig | None = None) -> None:
+    """Initialize the Datarush configuration as contextvar and register operations."""
+    config = config or DatarushConfig()
+
+    set_datarush_config(config)
+
+    for operation in config.custom_operations:
+        register_operation_type(operation)

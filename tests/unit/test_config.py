@@ -1,19 +1,8 @@
-from unittest.mock import patch
-
 from datarush.config import DatarushConfig, get_datarush_config, set_datarush_config
 from datarush.core.dataflow import Operation
 
 
-def test_get_datarush_config_default():
-    """Test getting the default Datarush configuration."""
-    set_datarush_config(None)
-    retrieved_config = get_datarush_config()
-    assert retrieved_config.custom_operations == []
-    assert retrieved_config._s3_config_factory is None
-
-
-@patch("datarush.core.operations.register_operation_type")
-def test_set_and_get_datarush_config(mock_register_operation_type):
+def test_set_and_get_datarush_config():
     """Test setting and getting the Datarush configuration."""
 
     class CustomOperation(Operation):
@@ -32,4 +21,3 @@ def test_set_and_get_datarush_config(mock_register_operation_type):
     assert retrieved_config.custom_operations == [CustomOperation]
     assert retrieved_config.s3 == "custom s3 config"
     assert retrieved_config is config
-    mock_register_operation_type.assert_called_once_with(CustomOperation)
