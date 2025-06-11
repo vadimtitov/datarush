@@ -118,22 +118,14 @@ class DatarushConfig:
 _config_var = ContextVar[DatarushConfig]("config")
 
 
-def set_datarush_config(config: DatarushConfig | None = None) -> None:
-    """Set the Datarush configuration."""
-    config = config or DatarushConfig()
-
+def set_datarush_config(config: DatarushConfig) -> None:
+    """Set the Datarush configuration to contextvar."""
     _config_var.set(config)
-
-    from datarush.core.operations import register_operation_type
-
-    for operation in config.custom_operations:
-        register_operation_type(operation)
 
 
 def get_datarush_config() -> DatarushConfig:
     """Get the current Datarush configuration."""
     try:
         return _config_var.get()
-    except LookupError:
-        set_datarush_config()
-        return _config_var.get()
+    except LookupError as e:
+        raise LookupError("set_datarush_config must be called before get_datarush_config") from e
