@@ -23,6 +23,7 @@ from datarush.core.operations.transformations import (
     group_by,
     join,
     melt_table,
+    parse_json_column,
     pivot_table,
     select_columns,
     set_header,
@@ -82,6 +83,7 @@ for _op_type in [
     derive_column.DeriveColumn,
     calculate_hash.CalculateHash,
     extract_regex_group.ExtractRegexGroup,
+    parse_json_column.ParseJSONColumn,
     # Sink
     s3_sink.S3ObjectSink,
     s3_dataset_sink.S3DatasetSink,
