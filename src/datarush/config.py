@@ -1,10 +1,9 @@
 """Application config."""
 
 from contextvars import ContextVar
-from dataclasses import dataclass
 from enum import StrEnum
 from functools import cached_property
-from typing import Callable
+from typing import Any, Callable
 
 from dotenv import load_dotenv
 from envarify import AnyHttpUrl, BaseConfig, EnvVar, SecretString
@@ -19,14 +18,33 @@ load_dotenv(override=False)
 ################################
 
 
-@dataclass(frozen=True)
 class S3Config(BaseConfig):
     """S3 Configuration."""
 
     endpoint: AnyHttpUrl = EnvVar("S3_ENDPOINT")
     access_key: str = EnvVar("S3_ACCESS_KEY")
     secret_key: SecretString = EnvVar("S3_SECRET_KEY")
+    session_token: SecretString | None = EnvVar("S3_SESSION_TOKEN", default=None)
+    region_name: str | None = EnvVar("S3_REGION_NAME", default=None)
+    account_id: str | None = EnvVar("S3_ACCOUNT_ID", default=None)
+    profile_name: str | None = EnvVar("S3_PROFILE_NAME", default=None)
     default_bucket: str | None = EnvVar("S3_DEFAULT_BUCKET", default=None)
+
+    def __init__(self, **kwargs: Any) -> None:
+        """
+        Initialize S3Config with environment variables.
+
+        Args:
+            endpoint: S3 endpoint URL.
+            access_key: S3 access key.
+            secret_key: S3 secret key (as SecretString).
+            session_token: Optional session token for temporary credentials.
+            region_name: Optional AWS region name.
+            account_id: Optional AWS account ID.
+            profile_name: Optional AWS profile name.
+            default_bucket: Optional default bucket name.
+        """
+        super().__init__(**kwargs)
 
 
 ################################
