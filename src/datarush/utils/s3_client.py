@@ -93,6 +93,12 @@ class S3Dataset:
         self._session = boto3.Session(
             aws_access_key_id=self._config.access_key,
             aws_secret_access_key=self._config.secret_key.reveal(),
+            aws_session_token=(
+                self._config.session_token.reveal() if self._config.session_token else None
+            ),
+            region_name=self._config.region_name,
+            aws_account_id=self._config.account_id,
+            profile_name=self._config.profile_name,
         )
         wr.config.s3_endpoint_url = self._config.endpoint
 
