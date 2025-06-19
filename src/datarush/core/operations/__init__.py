@@ -27,6 +27,7 @@ from datarush.core.operations.transformations import (
     melt_table,
     parse_json_column,
     pivot_table,
+    replace,
     select_columns,
     set_header,
     sort,
@@ -88,6 +89,7 @@ for _op_type in [
     parse_json_column.ParseJSONColumn,
     columns_to_dict.ColumnsToDict,
     dict_to_columns.DictToColumns,
+    replace.Replace,
     # Sink
     s3_sink.S3ObjectSink,
     s3_dataset_sink.S3DatasetSink,
