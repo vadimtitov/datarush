@@ -34,6 +34,7 @@ from datarush.core.operations.transformations import (
     sort,
     transpose,
     unset_header,
+    wide_to_long,
 )
 
 _TITLE_TO_OPERATION_TYPE: dict[str, Type[Operation]] = {}
@@ -92,6 +93,7 @@ for _op_type in [
     dict_to_columns.DictToColumns,
     replace.Replace,
     deduplicate_rows.DeduplicateRows,
+    wide_to_long.WideToLong,
     # Sink
     s3_sink.S3ObjectSink,
     s3_dataset_sink.S3DatasetSink,
