@@ -17,6 +17,7 @@ from datarush.core.operations.transformations import (
     columns_to_dict,
     copy_column,
     copy_table,
+    deduplicate_rows,
     derive_column,
     dict_to_columns,
     dropna,
@@ -27,11 +28,13 @@ from datarush.core.operations.transformations import (
     melt_table,
     parse_json_column,
     pivot_table,
+    replace,
     select_columns,
     set_header,
     sort,
     transpose,
     unset_header,
+    wide_to_long,
 )
 
 _TITLE_TO_OPERATION_TYPE: dict[str, Type[Operation]] = {}
@@ -88,6 +91,9 @@ for _op_type in [
     parse_json_column.ParseJSONColumn,
     columns_to_dict.ColumnsToDict,
     dict_to_columns.DictToColumns,
+    replace.Replace,
+    deduplicate_rows.DeduplicateRows,
+    wide_to_long.WideToLong,
     # Sink
     s3_sink.S3ObjectSink,
     s3_dataset_sink.S3DatasetSink,

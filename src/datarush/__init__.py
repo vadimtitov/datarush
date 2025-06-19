@@ -12,6 +12,7 @@ from datarush.core.types import (
     ValueType,
 )
 from datarush.run import run_template, run_template_from_command_line
+from datarush.version import __version__
 
 __all__ = [
     "BaseOperationModel",
@@ -27,4 +28,5 @@ __all__ = [
     "register_operation_type",
     "run_template",
     "run_template_from_command_line",
+    "__version__",
 ]
