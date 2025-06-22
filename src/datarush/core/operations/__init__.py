@@ -17,6 +17,7 @@ from datarush.core.operations.transformations import (
     calculate,
     calculate_hash,
     columns_to_dict,
+    concatenate_tables,
     copy_column,
     copy_table,
     deduplicate_rows,
@@ -73,6 +74,7 @@ for _op_type in [
     s3_object_source.S3ObjectSource,
     s3_dataset_source.S3DatasetSource,
     # Transformation
+    concatenate_tables.ConcatenateTables,
     assert_has_columns.AssertHasColumns,
     add_range_column.AddRangeColumn,
     rename_table.RenameTable,
