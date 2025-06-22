@@ -11,6 +11,8 @@ from datarush.core.operations.sources import (
     s3_object_source,
 )
 from datarush.core.operations.transformations import (
+    add_range_column,
+    assert_has_columns,
     astype,
     calculate,
     calculate_hash,
@@ -28,6 +30,7 @@ from datarush.core.operations.transformations import (
     melt_table,
     parse_json_column,
     pivot_table,
+    rename_table,
     replace,
     select_columns,
     set_header,
@@ -70,6 +73,9 @@ for _op_type in [
     s3_object_source.S3ObjectSource,
     s3_dataset_source.S3DatasetSource,
     # Transformation
+    assert_has_columns.AssertHasColumns,
+    add_range_column.AddRangeColumn,
+    rename_table.RenameTable,
     astype.AsType,
     dropna.DropNaValues,
     sort.SortByColumn,
