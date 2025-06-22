@@ -191,7 +191,7 @@ def template_to_dataflow(template: TemplateDict) -> Dataflow:
 
 def dataflow_to_template(dataflow: Dataflow) -> TemplateDict:
     """Convert a dataflow to a template."""
-    paramaters = [cast(ParameterDict, param.model_dump()) for param in dataflow.parameters]
+    parameters = [cast(ParameterDict, param.model_dump()) for param in dataflow.parameters]
     operations = [
         {
             "name": operation.name,
@@ -201,4 +201,4 @@ def dataflow_to_template(dataflow: Dataflow) -> TemplateDict:
         for operation in dataflow.operations
     ]
 
-    return {"parameters": paramaters, "operations": operations, "datarush_version": __version__}
+    return {"parameters": parameters, "operations": operations, "datarush_version": __version__}
