@@ -8,6 +8,7 @@ import streamlit as st
 
 from datarush.core.dataflow import Dataflow, Operation, Tableset
 from datarush.core.types import ParameterSpec
+from datarush.exceptions import OperationError
 
 
 def get_dataflow() -> DataflowUI:
@@ -105,9 +106,14 @@ class DataflowUI(Dataflow):
             if cache_valid and cache_info and cache_info.cache == input_hash:
                 self._current_tableset = cache_info.tableset.copy()
             else:
-                self._current_tableset = operation.operate(self._current_tableset)
-                self._operation_cache[idx] = _CacheTuple(input_hash, self._current_tableset.copy())
-                cache_valid = False
+                try:
+                    self._current_tableset = operation.operate(self._current_tableset)
+                    self._operation_cache[idx] = _CacheTuple(
+                        input_hash, self._current_tableset.copy()
+                    )
+                    cache_valid = False
+                except Exception as e:
+                    raise OperationError(str(e), operation) from e
 
     def _invalidate_cache_from(self, start_index: int) -> None:
         keys_to_delete = [i for i in self._operation_cache if i >= start_index]

@@ -5,6 +5,7 @@ from typing import cast
 import streamlit as st
 
 from datarush.core.operations import get_operation_type_by_title, list_operation_types
+from datarush.exceptions import OperationError
 from datarush.ui.form import operation_from_streamlit, update_operation_from_streamlit
 from datarush.ui.state import get_dataflow
 from datarush.utils.misc import crossed_out, truncate
@@ -22,8 +23,11 @@ def operations_page() -> None:
         show_add_operation_ui()
 
         if st.button("Run Operations"):
-            get_dataflow().run()
-            st.rerun()
+            try:
+                get_dataflow().run()
+                st.rerun()
+            except OperationError as e:
+                st.error(e.summary())
 
 
 def show_tables() -> None:
