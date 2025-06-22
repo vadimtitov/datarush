@@ -11,12 +11,16 @@ from datarush.core.operations.sources import (
     s3_object_source,
 )
 from datarush.core.operations.transformations import (
+    add_range_column,
+    assert_has_columns,
     astype,
     calculate,
     calculate_hash,
     columns_to_dict,
+    concatenate_tables,
     copy_column,
     copy_table,
+    deduplicate_rows,
     derive_column,
     dict_to_columns,
     dropna,
@@ -27,11 +31,14 @@ from datarush.core.operations.transformations import (
     melt_table,
     parse_json_column,
     pivot_table,
+    rename_table,
+    replace,
     select_columns,
     set_header,
     sort,
     transpose,
     unset_header,
+    wide_to_long,
 )
 
 _TITLE_TO_OPERATION_TYPE: dict[str, Type[Operation]] = {}
@@ -66,7 +73,11 @@ for _op_type in [
     local_file_source.LocalFileSource,
     s3_object_source.S3ObjectSource,
     s3_dataset_source.S3DatasetSource,
-    # Transform
+    # Transformation
+    concatenate_tables.ConcatenateTables,
+    assert_has_columns.AssertHasColumns,
+    add_range_column.AddRangeColumn,
+    rename_table.RenameTable,
     astype.AsType,
     dropna.DropNaValues,
     sort.SortByColumn,
@@ -88,6 +99,9 @@ for _op_type in [
     parse_json_column.ParseJSONColumn,
     columns_to_dict.ColumnsToDict,
     dict_to_columns.DictToColumns,
+    replace.Replace,
+    deduplicate_rows.DeduplicateRows,
+    wide_to_long.WideToLong,
     # Sink
     s3_sink.S3ObjectSink,
     s3_dataset_sink.S3DatasetSink,

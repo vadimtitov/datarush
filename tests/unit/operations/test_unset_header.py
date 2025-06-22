@@ -5,32 +5,37 @@ from datarush.core.dataflow import Table, Tableset
 from datarush.core.operations.transformations.unset_header import UnsetHeader
 
 
-def test_unset_header_inplace():
-    # Original DataFrame
-    df = pd.DataFrame(
-        columns=["name", "age"],
-        data=[
-            ["Alice", 30],
-            ["Bob", 25],
-        ],
-    )
-    tableset = Tableset([Table("people", df)])
+def test_unset_header_multiple_tables():
+    df1 = pd.DataFrame({"a": [1, 2], "b": [3, 4]})
+    df2 = pd.DataFrame({"x": ["u", "v"], "y": ["w", "z"]})
 
-    # Run operation
-    model = {"table": "people"}
-    operation = UnsetHeader(model)
-    result = operation.operate(tableset)
-    new_df = result.get_df("people")
-
-    # Expected DataFrame after unsetting header
-    expected_df = pd.DataFrame(
-        data=[
-            ["name", "age"],
-            ["Alice", 30],
-            ["Bob", 25],
+    tableset = Tableset(
+        [
+            Table("t1", df1),
+            Table("t2", df2),
         ]
     )
-    expected_df.columns = [0, 1]
 
-    # Compare actual and expected
-    pdt.assert_frame_equal(new_df, expected_df, check_dtype=False)
+    model = {"tables": ["t1", "t2"]}
+    op = UnsetHeader(model)
+    result = op.operate(tableset)
+
+    expected1 = pd.DataFrame(
+        [
+            ["a", "b"],
+            [1, 3],
+            [2, 4],
+        ]
+    )
+    expected2 = pd.DataFrame(
+        [
+            ["x", "y"],
+            ["u", "w"],
+            ["v", "z"],
+        ]
+    )
+    expected1.columns = ["0", "1"]
+    expected2.columns = ["0", "1"]
+
+    pdt.assert_frame_equal(result.get_df("t1"), expected1)
+    pdt.assert_frame_equal(result.get_df("t2"), expected2)

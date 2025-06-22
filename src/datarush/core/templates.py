@@ -18,6 +18,7 @@ from datarush.core.operations import get_operation_type_by_name
 from datarush.core.types import ParameterSpec
 from datarush.exceptions import TemplateAlreadyExistsError
 from datarush.utils.s3_client import S3Client
+from datarush.version import __version__
 
 _TEMPLATES_FOLDER = "templates"
 _TEMPLATE_FILE = "template.json"
@@ -38,6 +39,7 @@ class TemplateDict(TypedDict):
 
     parameters: list[ParameterDict]
     operations: list[dict]
+    datarush_version: str
 
 
 class TemplateManager(abc.ABC):
@@ -189,7 +191,7 @@ def template_to_dataflow(template: TemplateDict) -> Dataflow:
 
 def dataflow_to_template(dataflow: Dataflow) -> TemplateDict:
     """Convert a dataflow to a template."""
-    paramaters = [cast(ParameterDict, param.model_dump()) for param in dataflow.parameters]
+    parameters = [cast(ParameterDict, param.model_dump()) for param in dataflow.parameters]
     operations = [
         {
             "name": operation.name,
@@ -199,4 +201,4 @@ def dataflow_to_template(dataflow: Dataflow) -> TemplateDict:
         for operation in dataflow.operations
     ]
 
-    return {"parameters": paramaters, "operations": operations}
+    return {"parameters": parameters, "operations": operations, "datarush_version": __version__}

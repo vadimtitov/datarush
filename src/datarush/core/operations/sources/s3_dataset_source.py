@@ -15,7 +15,7 @@ class S3DatasetSourceModel(BaseModel):
     """S3 dataset Source model."""
 
     bucket: str = Field(title="Bucket")
-    path: str = Field(title="Dataset Path", default="datasets/wrangler/my-dataset-2")
+    path: str = Field(title="Dataset Path")
     content_type: ContentType = Field(title="Content Type")
     table_name: str = Field(title="Table Name", default="s3_table")
     error_on_empty: bool = Field(
