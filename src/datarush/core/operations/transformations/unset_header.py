@@ -1,4 +1,4 @@
-"""Unset Header operation."""
+"""Unset Header operation for multiple tables."""
 
 import pandas as pd
 from pydantic import Field
@@ -8,9 +8,9 @@ from datarush.core.types import BaseOperationModel, TableStr
 
 
 class UnsetHeaderModel(BaseOperationModel):
-    """Unset header operation model."""
+    """Unset header model for one or more tables."""
 
-    table: TableStr = Field(title="Table", description="Table to unset header from")
+    tables: list[TableStr] = Field(title="Tables", description="Tables to unset header from")
 
 
 class UnsetHeader(Operation):
@@ -23,21 +23,14 @@ class UnsetHeader(Operation):
 
     def summary(self) -> str:
         """Provide operation summary."""
-        return f"Unset header of `{self.model.table}`"
+        return f"Unset headers of {', '.join(f'`{t}`' for t in self.model.tables)}"
 
     def operate(self, tableset: Tableset) -> Tableset:
         """Run operation."""
-        df = tableset.get_df(self.model.table)
-
-        # Step 1: capture current headers and create a new row with same column names
-        header_row = pd.DataFrame([df.columns], columns=df.columns)
-
-        # Step 2: concatenate with original df
-        new_df = pd.concat([header_row, df], ignore_index=True)
-
-        # Step 3: reset column names to default integers
-        new_df.columns = list(range(new_df.shape[1]))
-
-        # Set back into the tableset
-        tableset.set_df(self.model.table, new_df)
+        for table_name in self.model.tables:
+            df = tableset.get_df(table_name)
+            header_row = pd.DataFrame([df.columns], columns=df.columns)
+            new_df = pd.concat([header_row, df], ignore_index=True)
+            new_df.columns = [str(i) for i in range(new_df.shape[1])]
+            tableset.set_df(table_name, new_df)
         return tableset
