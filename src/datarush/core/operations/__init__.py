@@ -69,7 +69,7 @@ for _op_type in [
     local_file_source.LocalFileSource,
     s3_object_source.S3ObjectSource,
     s3_dataset_source.S3DatasetSource,
-    # Transform
+    # Transformation
     astype.AsType,
     dropna.DropNaValues,
     sort.SortByColumn,
