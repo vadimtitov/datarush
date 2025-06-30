@@ -106,6 +106,7 @@ class StringMap(dict):
     def __get_pydantic_core_schema__(
         cls, source_type: Any, handler: GetCoreSchemaHandler
     ) -> CoreSchema:
+        """Get custom schema for Pydantic validation."""
         return core_schema.no_info_after_validator_function(
             lambda v: StringMap(v),
             core_schema.dict_schema(

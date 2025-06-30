@@ -3,6 +3,7 @@
 # flake8: noqa: D103
 from __future__ import annotations
 
+import json
 from typing import Any, Literal, Type, cast, get_args
 
 import jinja2
@@ -128,7 +129,11 @@ def model_dict_from_streamlit[T: BaseModel](
             # Display the editor for jinja2 template
             st.write(f"{kwargs['label']} template")
             value = st_ace(
-                str(current_value),
+                (
+                    str(current_value)
+                    if not isinstance(current_value, dict)
+                    else json.dumps(current_value)
+                ),
                 language="django",
                 theme="twilight",
                 keybinding="vscode",

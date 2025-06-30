@@ -4,17 +4,28 @@
 
 from __future__ import annotations
 
+import ast
 from datetime import date, datetime
 from enum import Enum
 from typing import Any, Callable, Literal, Type, cast, get_args, get_origin
 
-from datarush.core.types import ColumnStr, TableStr
+from pydantic import BaseModel
+
+from datarush.core.types import ColumnStr, StringMap, TableStr, TextStr
 
 
 def convert_to_type[T](value: str, to_type: type[T] | None) -> T:
     """Convert a string value to the specified type."""
     if is_string_enum(to_type):
         return to_type(value)  # type: ignore
+
+    if is_literal(to_type):
+        if value not in get_args(to_type):
+            raise ValueError(f"Value '{value}' is not a valid literal for type {to_type}")
+        return value
+
+    if issubclass(to_type, BaseModel):
+        return to_type.model_validate_json(value)
 
     if to_type not in _TYPE_PARSERS:
         raise ValueError(f"Unsupported type {to_type} for conversion")
@@ -74,4 +85,7 @@ _TYPE_PARSERS: dict[type, Callable[[str], Any]] = {
     list[str]: lambda v: [item.strip().strip("'").strip('"') for item in v.strip("[]").split(",")],
     list[int]: lambda v: [int(item.strip()) for item in v.strip("[]").split(",")],
     list[float]: lambda v: [float(item.strip()) for item in v.strip("[]").split(",")],
+    TextStr: str,
+    StringMap: ast.literal_eval,
+    dict: ast.literal_eval,
 }

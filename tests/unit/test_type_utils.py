@@ -1,8 +1,10 @@
 from datetime import date, datetime
 from enum import Enum
+from typing import Literal
 
 import pytest
 
+from datarush.core.types import StringMap
 from datarush.utils.type_utils import convert_to_type, is_string_enum, types_are_equal
 
 
@@ -58,9 +60,44 @@ def test_convert_to_type_enum():
         convert_to_type("invalid_option", MockEnum)
 
 
+def test_convert_to_type_string_map():
+    assert convert_to_type("{'key1': 'value1', 'key2': 'value2'}", StringMap) == {
+        "key1": "value1",
+        "key2": "value2",
+    }
+    assert convert_to_type('{"key1": "value1", "key2": "value2"}', StringMap) == {
+        "key1": "value1",
+        "key2": "value2",
+    }
+
+
+def test_convert_to_type_literal():
+    assert convert_to_type("A", Literal["A", "B"]) == "A"
+    with pytest.raises(ValueError):
+        convert_to_type("C", Literal["A", "B"])
+
+
+def test_convert_to_type_pydantic_model():
+    from pydantic import BaseModel
+
+    class MyModel(BaseModel):
+        name: str
+        age: int
+
+    model_instance = convert_to_type('{"name": "Alice", "age": 30}', MyModel)
+    assert model_instance.name == "Alice"
+    assert model_instance.age == 30
+
+    with pytest.raises(ValueError):
+        convert_to_type('{"name": "Alice"}', MyModel)  # Missing 'age' field
+
+
 def test_convert_to_type_unsupported_type():
+    class UnsupportedType:
+        pass
+
     with pytest.raises(ValueError, match="Unsupported type"):
-        convert_to_type("value", dict)  # Unsupported type
+        convert_to_type("value", UnsupportedType)
 
 
 def test_is_string_enum():
