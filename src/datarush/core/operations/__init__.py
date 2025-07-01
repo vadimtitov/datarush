@@ -9,6 +9,7 @@ from datarush.core.operations.sources import (
     local_file_source,
     s3_dataset_source,
     s3_object_source,
+    send_http_request,
 )
 from datarush.core.operations.transformations import (
     add_range_column,
@@ -69,6 +70,7 @@ def get_operation_type_by_name(name: str) -> Type[Operation]:
 # Register build-in operations
 for _op_type in [
     # Source
+    send_http_request.SendHttpRequest,
     http_source.HttpSource,
     local_file_source.LocalFileSource,
     s3_object_source.S3ObjectSource,

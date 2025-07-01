@@ -22,10 +22,10 @@ def convert_to_type[T](value: str, to_type: type[T] | None) -> T:
     if is_literal(to_type):
         if value not in get_args(to_type):
             raise ValueError(f"Value '{value}' is not a valid literal for type {to_type}")
-        return value
+        return value  # type: ignore
 
-    if issubclass(to_type, BaseModel):
-        return to_type.model_validate_json(value)
+    if to_type is not None and issubclass(to_type, BaseModel):
+        return to_type.model_validate_json(value)  # type: ignore
 
     if to_type not in _TYPE_PARSERS:
         raise ValueError(f"Unsupported type {to_type} for conversion")
