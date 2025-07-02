@@ -28,9 +28,7 @@ class S3Client:
             endpoint_url=config.endpoint,
             aws_access_key_id=config.access_key,
             aws_secret_access_key=config.secret_key.reveal(),
-            aws_session_token=(
-                config.session_token.reveal() if config.session_token else None
-            ),
+            aws_session_token=(config.session_token.reveal() if config.session_token else None),
             region_name=config.region_name,
             aws_account_id=config.account_id,
             config=Config(signature_version="s3v4"),
