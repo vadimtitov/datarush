@@ -3,9 +3,11 @@
 # flake8: noqa: D103
 from __future__ import annotations
 
+import json
 from typing import Any, Literal, Type, cast, get_args
 
 import jinja2
+import pandas as pd
 import streamlit as st
 from pydantic import BaseModel, ValidationError
 from pydantic_core import PydanticUndefined
@@ -17,7 +19,9 @@ from datarush.core.types import (
     ColumnStrMeta,
     ContentType,
     RowConditionGroup,
+    StringMap,
     TableStr,
+    TextStr,
     ValueType,
 )
 from datarush.ui.state import get_dataflow
@@ -125,7 +129,11 @@ def model_dict_from_streamlit[T: BaseModel](
             # Display the editor for jinja2 template
             st.write(f"{kwargs['label']} template")
             value = st_ace(
-                str(current_value),
+                (
+                    str(current_value)
+                    if not isinstance(current_value, dict)
+                    else json.dumps(current_value)
+                ),
                 language="django",
                 theme="twilight",
                 keybinding="vscode",
@@ -262,6 +270,31 @@ def model_dict_from_streamlit[T: BaseModel](
                 key=kwargs["key"] + "_condition_group",
                 advanced_mode=advanced_mode,
             )
+        elif field.annotation is TextStr:
+            value = st.text_area(
+                value=current_value if current_value is not None else (default or ""), **kwargs
+            )
+        elif field.annotation is StringMap:
+            st.markdown(
+                f"<div style='font-size:14px; font-weight:400; margin-bottom:6px'>{kwargs['label']}</div>",
+                unsafe_allow_html=True,
+            )
+            value_df = st.data_editor(
+                pd.DataFrame(
+                    data=[(k, v) for k, v in current_value.items()] if current_value else None,
+                    columns=["key", "value"],
+                ),
+                num_rows="dynamic",
+                key=kwargs["key"],
+                use_container_width=True,
+                hide_index=True,
+                column_order=("key", "value"),
+                column_config={
+                    "key": st.column_config.TextColumn("Key", max_chars=100),
+                    "value": st.column_config.TextColumn("Value", max_chars=1000),
+                },
+            )
+            value = dict(zip(value_df["key"], value_df["value"]))
         else:
             raise TypeError(f"Not supported type: {field.annotation}")
 

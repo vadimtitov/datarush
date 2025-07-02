@@ -86,6 +86,35 @@ class ColumnStr(str):
         )
 
 
+class TextStr(str):
+    """Special string type to mark field that takes multiline text input."""
+
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls, source_type: Any, handler: GetCoreSchemaHandler
+    ) -> CoreSchema:
+        """Get custom schema for Pydantic validation."""
+        return core_schema.no_info_after_validator_function(
+            lambda v: TextStr(v), core_schema.str_schema()
+        )
+
+
+class StringMap(dict):
+    """Special dict type to mark field that takes dict[str, str] as input."""
+
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls, source_type: Any, handler: GetCoreSchemaHandler
+    ) -> CoreSchema:
+        """Get custom schema for Pydantic validation."""
+        return core_schema.no_info_after_validator_function(
+            lambda v: StringMap(v),
+            core_schema.dict_schema(
+                keys_schema=core_schema.str_schema(), values_schema=core_schema.str_schema()
+            ),
+        )
+
+
 @dataclass(frozen=True)
 class ColumnStrMeta:
     """Metadata for ColumnStr type."""
