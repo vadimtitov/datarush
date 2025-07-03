@@ -41,8 +41,8 @@ class S3DatasetSourceModel(BaseModel):
 class S3DatasetSource(Operation):
     """S3 dataset source operation."""
 
-    name = "s3_dataset_source"
-    title = "S3 Dataset Source"
+    name = "read_s3_dataset"
+    title = "Read S3 Dataset"
     description = "Download dataset from S3"
     model: S3DatasetSourceModel
 

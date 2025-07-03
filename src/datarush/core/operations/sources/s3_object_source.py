@@ -22,8 +22,8 @@ class S3SourceModel(BaseModel):
 class S3ObjectSource(Operation):
     """S3 object source operation."""
 
-    name = "s3_object"
-    title = "S3 Object"
+    name = "read_s3_object"
+    title = "Read S3 Object"
     description = "S3 Object Source"
     model: S3SourceModel
 

@@ -5,7 +5,6 @@ from typing import Type
 from datarush.core.dataflow import Operation
 from datarush.core.operations.sinks import s3_dataset_sink, s3_sink
 from datarush.core.operations.sources import (
-    http_source,
     local_file_source,
     s3_dataset_source,
     s3_object_source,
@@ -71,7 +70,6 @@ def get_operation_type_by_name(name: str) -> Type[Operation]:
 for _op_type in [
     # Source
     send_http_request.SendHttpRequest,
-    http_source.HttpSource,
     local_file_source.LocalFileSource,
     s3_object_source.S3ObjectSource,
     s3_dataset_source.S3DatasetSource,
