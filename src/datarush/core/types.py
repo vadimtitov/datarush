@@ -176,7 +176,7 @@ class PartitionFilter(BaseModel):
     def summary(self) -> str:
         """Provide a summary of the condition."""
         negate_str = "not " if self.negate else ""
-        return f"{negate_str} {self.column} {self.operator.value} {self.value}"
+        return f"{negate_str}{self.column} {self.operator.value} {self.value}"
 
 
 class PartitionFilterGroup(BaseModel):
