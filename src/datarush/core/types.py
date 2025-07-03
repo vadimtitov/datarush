@@ -165,5 +165,26 @@ class RowConditionGroup(BaseModel):
     combine: Literal["and", "or"] = "and"
 
 
+class PartitionFilter(BaseModel):
+    """Dataset partition filter."""
+
+    column: str
+    operator: ConditionOperator
+    value: str
+    negate: bool = False
+
+    def summary(self) -> str:
+        """Provide a summary of the condition."""
+        negate_str = "not " if self.negate else ""
+        return f"{negate_str} {self.column} {self.operator.value} {self.value}"
+
+
+class PartitionFilterGroup(BaseModel):
+    """Group of partition filters."""
+
+    filters: list[PartitionFilter] | None = None
+    combine: Literal["and", "or"] = "and"
+
+
 class BaseOperationModel(BaseModel):
     """Base model for operations."""
