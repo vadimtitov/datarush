@@ -31,8 +31,8 @@ class S3DatasetSinkModel(BaseOperationModel):
 class S3DatasetSink(Operation):
     """Operation that writes a table to an S3 dataset."""
 
-    name = "s3_dataset_sink"
-    title = "S3 Dataset Sink"
+    name = "write_s3_dataset"
+    title = "Write S3 Dataset"
     description = "Write table as S3 dataset"
     model: S3DatasetSinkModel
 

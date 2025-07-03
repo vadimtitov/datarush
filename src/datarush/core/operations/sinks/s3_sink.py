@@ -22,8 +22,8 @@ class S3SinkModel(BaseOperationModel):
 class S3ObjectSink(Operation):
     """Operation that writes a table to an S3 object."""
 
-    name = "s3_object_sink"
-    title = "S3 Object Sink"
+    name = "write_s3_object"
+    title = "Write S3 Object"
     description = "S3 Object Sink"
     model: S3SinkModel
 

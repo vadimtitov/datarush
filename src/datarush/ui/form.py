@@ -18,6 +18,8 @@ from datarush.core.types import (
     ColumnStr,
     ColumnStrMeta,
     ContentType,
+    PartitionFilter,
+    PartitionFilterGroup,
     RowConditionGroup,
     StringMap,
     TableStr,
@@ -270,6 +272,11 @@ def model_dict_from_streamlit[T: BaseModel](
                 key=kwargs["key"] + "_condition_group",
                 advanced_mode=advanced_mode,
             )
+        elif field.annotation is PartitionFilterGroup:
+            value = _partition_filter_group_dict_from_streamlit(
+                current_dict=current_value,
+                key=kwargs["key"] + "_partition_filter_group",
+            )
         elif field.annotation is TextStr:
             value = st.text_area(
                 value=current_value if current_value is not None else (default or ""), **kwargs
@@ -491,3 +498,138 @@ def _condition_group_dict_from_streamlit(
         return res
     except ValidationError as e:
         return None
+
+
+# PARTITIONS FILTERS
+
+
+def _partition_filter_group_dict_from_streamlit(
+    current_dict: dict[str, Any] | None = None,
+    key: int | str | None = None,
+) -> dict | None:
+    """Render a partition filter group form in Streamlit and return the condition group dictionary.
+
+    This currently utilizes st.session_state to store conditions state
+    which has a few problems and should be refactored in the future.
+    """
+    current_dict = current_dict or {}
+
+    if f"{key}_pt_filters" not in st.session_state:
+        st.session_state[f"{key}_pt_filters"] = current_dict.get("filters", [])
+
+    current_combine = current_dict.get("combine", "and")
+    filters = st.session_state[f"{key}_pt_filters"]
+
+    with st.container(border=True, key=f"{key}_container_pt_filters"):
+        st.write("Partition Filters")
+        combine: Literal["and", "or"] = st.selectbox(
+            "Combine",
+            options=["and", "or"],
+            index=1 if current_combine == "or" else 0,
+            key=f"{key}_combine",
+        )
+
+        updated_filters = []
+        for i, current_filter in enumerate(filters):
+            with st.container(key=f"{key}_condition_{i}_container"):
+                partition_filter = _partition_filter_dict_from_streamlit(
+                    current_dict=current_filter,
+                    key=f"{key}_condition_{i}",
+                )
+                if partition_filter:
+                    updated_filters.append(partition_filter)
+
+                if partition_filter is False:
+                    st.session_state[f"{key}_pt_filters"].pop(i)
+                    st.rerun()
+
+        # Update session state with modified conditions
+        st.session_state[f"{key}_pt_filters"] = updated_filters
+
+        if st.button("Add Filter", key=f"{key}_add_pt_filter"):
+            # Add a new condition to the session state
+            new_condition = PartitionFilter(
+                column="",
+                operator=ConditionOperator.EQ,
+                value="",
+                negate=False,
+            ).model_dump()
+            st.session_state[f"{key}_pt_filters"].append(new_condition)
+            st.rerun()
+
+    try:
+        res = PartitionFilterGroup(
+            combine=combine,
+            filters=st.session_state[f"{key}_pt_filters"],
+        ).model_dump()
+        return res
+    except ValidationError as e:
+        return None
+
+
+def _partition_filter_dict_from_streamlit(
+    current_dict: dict[str, Any] | None = None,
+    key: int | str | None = None,
+) -> dict | Literal[False] | None:
+    """Render a partition filter form in Streamlit and return the filter dictionary.
+
+    Returns:
+        dict | Literal[False] | None: The filter dictionary if valid, False if removed, or None if invalid.
+    """
+    current_dict = current_dict or {}
+    curr_column = current_dict.get("column")
+    curr_operator = current_dict.get("operator")
+    curr_value = current_dict.get("value")
+    curr_negate = current_dict.get("negate", False)
+
+    with st.container(border=True, key=key):
+        st.write("Condition")
+
+        # Layout
+        (
+            col_area,
+            operator_area,
+            value_area,
+        ) = st.columns([2, 2, 2])
+        negate_area, remove_area = st.columns([8, 1])
+
+        # Column
+        column = col_area.text_input(
+            "Column",
+            value=curr_column if curr_column else "",
+            key=f"{key}_column_input",
+        )
+
+        # Operator
+        operator_options = list(ConditionOperator)
+        operator = ConditionOperator(
+            operator_area.selectbox(
+                "Operator",
+                options=operator_options,
+                key=f"{key}_operator",
+                index=operator_options.index(curr_operator) if curr_operator else 0,
+            )
+        )
+
+        # Value
+        value = value_area.text_input("Value", key=f"{key}_value", value=curr_value)
+
+        # Negate
+        negate = negate_area.checkbox("Negate", key=f"{key}_negate", value=curr_negate)
+
+        # Remove button
+        if remove_area.button(
+            "", key=f"{key}_remove_pt_filter", help="Remove", icon=":material/close:"
+        ):
+            return False
+
+        try:
+            res = PartitionFilter(
+                column=column,
+                operator=operator,
+                value=value,  # type: ignore
+                negate=negate,
+            ).model_dump()
+            return res
+        except ValidationError as e:
+            return None
