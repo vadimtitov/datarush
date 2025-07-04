@@ -24,6 +24,7 @@ from datarush.core.operations.transformations import (
     derive_column,
     dict_to_columns,
     dropna,
+    explode,
     extract_regex_group,
     filter_row,
     group_by,
@@ -74,6 +75,7 @@ for _op_type in [
     s3_object_source.S3ObjectSource,
     s3_dataset_source.S3DatasetSource,
     # Transformation
+    explode.Explode,
     concatenate_tables.ConcatenateTables,
     assert_has_columns.AssertHasColumns,
     add_range_column.AddRangeColumn,
