@@ -214,6 +214,13 @@ def model_dict_from_streamlit[T: BaseModel](
                     value = st.multiselect(
                         options=current_value or [], default=current_value, **kwargs
                     )
+        elif types_are_equal(field.annotation, list[str]):
+            value = st.multiselect(
+                options=current_value or [],
+                default=current_value,
+                accept_new_options=True,
+                **kwargs,
+            )
         elif is_literal(field.annotation):
             options = list(get_args(field.annotation))
             value = st.selectbox(options=options, **kwargs)
@@ -303,7 +310,9 @@ def model_dict_from_streamlit[T: BaseModel](
             )
             value = dict(zip(value_df["key"], value_df["value"]))
         else:
-            raise TypeError(f"Not supported type: {field.annotation}")
+            raise TypeError(
+                f"Not supported BaseOperationModel type {field.annotation} for field {name}"
+            )
 
         if value is not None:
             model_dict[name] = value
