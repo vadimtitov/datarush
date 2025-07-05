@@ -161,7 +161,7 @@ class S3Dataset:
 
         if self._unique_ids and self._write_mode != DatasetWriteMode.APPEND:
             LOG.error("unique_ids are only supported in APPEND mode")
-            raise ValueError("unique_ids are only supported in APPEND mode. ")
+            raise ValueError("unique_ids are only supported in APPEND mode")
 
         if self._unique_ids:
             LOG.debug("Writing with unique IDs deduplication")
