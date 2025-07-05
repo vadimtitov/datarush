@@ -1,5 +1,6 @@
 """S3 client wrapper for basic file and folder operations."""
 
+import logging
 from enum import StrEnum
 from io import BytesIO
 from typing import Any, Sequence
@@ -12,6 +13,8 @@ from botocore.client import Config
 from datarush.config import S3Config, get_datarush_config
 from datarush.core.types import ContentType
 
+LOG = logging.getLogger(__name__)
+
 
 class DatasetDoesNotExistError(Exception):
     """Exception raised when a dataset does not exist."""
@@ -23,6 +26,7 @@ class S3Client:
     def __init__(self, config: S3Config | None = None) -> None:
         """Initialize the S3 client with configuration."""
         config = config or get_datarush_config().s3
+        LOG.debug(f"Initializing S3 client with endpoint: {config.endpoint}")
         self._client = boto3.client(
             "s3",
             endpoint_url=config.endpoint,
@@ -33,15 +37,20 @@ class S3Client:
             aws_account_id=config.account_id,
             config=Config(signature_version="s3v4"),
         )
+        LOG.debug("S3 client initialized successfully")
 
     def get_object(self, bucket: str, key: str) -> BytesIO:
         """Retrieve an object from S3 as BytesIO."""
+        LOG.debug(f"Retrieving object from S3: {bucket}/{key}")
         obj = self._client.get_object(Bucket=bucket, Key=key)
+        LOG.debug(f"Successfully retrieved object: {bucket}/{key}")
         return BytesIO(obj["Body"].read())
 
     def put_object(self, bucket: str, key: str, body: BytesIO) -> None:
         """Upload an object to S3."""
+        LOG.debug(f"Uploading object to S3: {bucket}/{key}")
         self._client.put_object(Bucket=bucket, Key=key, Body=body)
+        LOG.debug(f"Successfully uploaded object: {bucket}/{key}")
 
     def delete_object(self, bucket: str, key: str) -> None:
         """Delete an object from S3."""
@@ -87,10 +96,15 @@ class S3Dataset:
         """Initialize the S3 dataset client with configuration."""
         self._content_type = content_type
         self._path = f"s3://{bucket}/{prefix.strip('/')}"
+        LOG.debug(f"Initializing S3 dataset client for path: {self._path}")
 
         self._write_mode = write_mode.value
         self._partition_columns = partition_columns or []
         self._unique_ids = unique_ids or []
+        LOG.debug(
+            f"Dataset configuration: content_type={content_type}, write_mode={write_mode}, "
+            f"partition_columns={self._partition_columns}, unique_ids={self._unique_ids}"
+        )
 
         self._config = config or get_datarush_config().s3
         self._session = boto3.Session(
@@ -104,9 +118,12 @@ class S3Dataset:
             profile_name=self._config.profile_name,
         )
         wr.config.s3_endpoint_url = self._config.endpoint
+        LOG.debug("S3 dataset client initialized successfully")
 
     def read(self, **kwargs: Any) -> pd.DataFrame:
         """Read a dataset from S3."""
+        LOG.info(f"Reading dataset from S3: {self._path} (content_type: {self._content_type})")
+
         common_kwargs = dict(
             boto3_session=self._session,
             path=self._path,
@@ -115,29 +132,42 @@ class S3Dataset:
 
         try:
             if self._content_type == ContentType.JSON:
+                LOG.debug("Reading JSON dataset")
                 df = wr.s3.read_json(**common_kwargs, **kwargs)
             elif self._content_type == ContentType.CSV:
+                LOG.debug("Reading CSV dataset")
                 df = wr.s3.read_csv(**common_kwargs, **kwargs)
             elif self._content_type == ContentType.PARQUET:
+                LOG.debug("Reading Parquet dataset")
                 df = wr.s3.read_parquet(**common_kwargs, **kwargs)
             else:
                 raise ValueError(f"Unsupported content type: {self._content_type}")
         except wr.exceptions.NoFilesFound:
+            LOG.error(f"Dataset does not exist at {self._path}")
             raise DatasetDoesNotExistError(f"Dataset does not exist at {self._path}")
 
+        LOG.info(f"Successfully read dataset with shape: {df.shape}")
         return df
 
     def write(self, df: pd.DataFrame, **kwargs: Any) -> None:
         """Write a DataFrame to S3."""
+        LOG.info(
+            f"Writing DataFrame to S3: {self._path} (shape: {df.shape}, content_type: {self._content_type})"
+        )
+
         if df.empty:
+            LOG.warning("DataFrame is empty, skipping write operation")
             return
 
         if self._unique_ids and self._write_mode != DatasetWriteMode.APPEND:
-            raise ValueError("unique_ids are only supported in APPEND mode. ")
+            LOG.error("unique_ids are only supported in APPEND mode")
+            raise ValueError("unique_ids are only supported in APPEND mode")
 
         if self._unique_ids:
+            LOG.debug("Writing with unique IDs deduplication")
             self._write_unique(df, **kwargs)
         else:
+            LOG.debug("Writing without unique IDs")
             self._write(df, **kwargs)
 
     def _write(self, df: pd.DataFrame, **kwargs: Any) -> None:

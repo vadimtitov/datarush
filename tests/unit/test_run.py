@@ -11,8 +11,10 @@ from datarush.run import (
     run_template_from_command_line,
 )
 
+CustomOperation = MagicMock(name="custom_operation")
+
 MOCK_CONFIG = DatarushConfig(
-    custom_operations=["custom_operation"], s3_config_factory=lambda: "test_s3_config"
+    custom_operations=[CustomOperation], s3_config_factory=lambda: "test_s3_config"
 )
 
 
@@ -166,4 +168,4 @@ def test_setup(mock_register_operation_type):
     _setup(MOCK_CONFIG)
 
     assert get_datarush_config() == MOCK_CONFIG
-    mock_register_operation_type.assert_called_once_with("custom_operation")
+    mock_register_operation_type.assert_called_once_with(CustomOperation)

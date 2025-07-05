@@ -1,5 +1,6 @@
 """Application config."""
 
+import logging
 from contextvars import ContextVar
 from enum import StrEnum
 from functools import cached_property
@@ -11,6 +12,8 @@ from envarify import AnyHttpUrl, BaseConfig, EnvVar, SecretString
 from datarush.core.dataflow import Operation
 
 load_dotenv(override=False)
+
+LOG = logging.getLogger(__name__)
 
 
 ################################
@@ -57,6 +60,24 @@ class TemplateStoreType(StrEnum):
 
     S3 = "S3"
     FILESYSTEM = "FILESYSTEM"
+
+
+################################
+####### LOGGING CONFIG ########
+################################
+
+
+class LoggingConfig(BaseConfig):
+    """Logging Configuration."""
+
+    level: str = EnvVar("DATARUSH_LOG_LEVEL", default="INFO")
+    log_file: str | None = EnvVar("DATARUSH_LOG_FILE", default=None)
+    format_string: str | None = EnvVar("DATARUSH_LOG_FORMAT", default=None)
+
+    def __init__(self, **kwargs: Any) -> None:
+        """Initialize LoggingConfig with environment variables."""
+        super().__init__(**kwargs)
+        LOG.debug(f"LoggingConfig initialized with level: {self.level}")
 
 
 class S3TemplateStoreConfig(BaseConfig):
@@ -112,8 +133,12 @@ class DatarushConfig:
             custom_operations: List of custom operations to be registered.
             s3_config_factory: Optional factory function to create S3Config.
         """
+        LOG.debug("Initializing DatarushConfig")
         self._custom_operations = custom_operations or []
         self._s3_config_factory = s3_config_factory
+        LOG.debug(
+            f"DatarushConfig initialized with {len(self._custom_operations)} custom operations"
+        )
 
     @property
     def custom_operations(self) -> list[type[Operation]]:
@@ -131,6 +156,11 @@ class DatarushConfig:
     def template_store(self) -> TemplateStoreConfig:
         """Get template store configuration."""
         return TemplateStoreConfig.fromenv()
+
+    @cached_property
+    def logging(self) -> LoggingConfig:
+        """Get logging configuration."""
+        return LoggingConfig.fromenv()
 
 
 _config_var = ContextVar[DatarushConfig]("config")

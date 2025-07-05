@@ -13,6 +13,7 @@ import pandas as pd
 from datarush.core.types import BaseOperationModel, ParameterSpec
 from datarush.exceptions import UnknownTableError
 from datarush.utils.jinja2 import model_validate_jinja2
+from datarush.utils.logging import OperationLogger
 
 LOG = logging.getLogger(__name__)
 
@@ -45,11 +46,16 @@ class Tableset:
         """Get dataframe by the name of its table."""
         table = self._table_map.get(name)
         if not table:
+            LOG.error(
+                f"Table '{name}' not found. Available tables: {list(self._table_map.keys())}"
+            )
             raise UnknownTableError(name)
+        LOG.debug(f"Retrieved table '{name}' with shape {table.df.shape}")
         return table.df
 
     def set_df(self, name: str, df: pd.DataFrame) -> None:
         """Set dataframe for the given table name."""
+        LOG.debug(f"Setting table '{name}' with shape {df.shape}")
         self._table_map[name] = Table(name, df)
 
     def __getitem__(self, key: str) -> Table:
@@ -200,7 +206,23 @@ class Dataflow:
     def run(self) -> None:
         """Run dataflow by executing all enabled operations."""
         self._current_tableset = Tableset([])
-        for operation in self.operations:
+        LOG.debug("Initialized empty tableset")
+
+        for i, operation in enumerate(self.operations, 1):
+            if not operation.is_enabled:
+                LOG.debug(
+                    f"Skipping disabled operation {i}/{len(self.operations)}: {operation.title}"
+                )
+                continue
+
+            LOG.info(f"Executing operation {i}/{len(self.operations)}: {operation.title}")
+
             context = self.get_current_context()
             operation.update_template_context(context)
-            self._current_tableset = operation.operate(self._current_tableset)
+
+            with OperationLogger(operation.name, operation.title, LOG):
+                self._current_tableset = operation.operate(self._current_tableset)
+
+            # Log tableset state after operation
+            table_names = list(self._current_tableset)
+            LOG.debug(f"Tableset after operation {i}: {table_names}")
