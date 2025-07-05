@@ -7,49 +7,85 @@ from datarush.core.operations.transformations.replace import Replace
 
 
 @pytest.mark.parametrize(
-    "use_regex,to_replace,replacement,expected",
+    "model,expected",
     [
         (
-            False,
-            "x",
-            "X",
+            # Exact match on one column
+            {
+                "table": "people",
+                "columns": ["city"],
+                "to_replace": {"London": "LON", "Paris": "PAR"},
+                "regex": False,
+            },
             pd.DataFrame(
                 {
-                    "a": ["X1", "X2", "y3"],
-                    "b": ["z", "XX", "w"],  # fixed from "Xx"
+                    "name": ["Alice", "Bob", "Charlie", "123"],
+                    "city": ["LON", "PAR", "LON", "Berlin"],
+                    "notes": ["abc123", "xyz", "123abc", "000"],
                 }
             ),
         ),
         (
-            True,
-            r"\d",
-            "#",
+            # Exact match across all columns
+            {
+                "table": "people",
+                "columns": [],
+                "to_replace": {"London": "LON", "Bob": "Robert"},
+                "regex": False,
+            },
             pd.DataFrame(
                 {
-                    "a": ["x#", "x#", "y#"],
-                    "b": ["z", "xx", "w"],  # fixed from "x#"
+                    "name": ["Alice", "Robert", "Charlie", "123"],
+                    "city": ["LON", "Paris", "LON", "Berlin"],
+                    "notes": ["abc123", "xyz", "123abc", "000"],
+                }
+            ),
+        ),
+        (
+            # Regex replacement on one column
+            {
+                "table": "people",
+                "columns": ["notes"],
+                "to_replace": {r"\d+": "<NUM>"},
+                "regex": True,
+            },
+            pd.DataFrame(
+                {
+                    "name": ["Alice", "Bob", "Charlie", "123"],
+                    "city": ["London", "Paris", "London", "Berlin"],
+                    "notes": ["abc<NUM>", "xyz", "<NUM>abc", "<NUM>"],
+                }
+            ),
+        ),
+        (
+            # Regex replacement on all columns
+            {
+                "table": "people",
+                "columns": [],
+                "to_replace": {r"\d+": "###"},
+                "regex": True,
+            },
+            pd.DataFrame(
+                {
+                    "name": ["Alice", "Bob", "Charlie", "###"],
+                    "city": ["London", "Paris", "London", "Berlin"],
+                    "notes": ["abc###", "xyz", "###abc", "###"],
                 }
             ),
         ),
     ],
 )
-def test_replace_operation(use_regex, to_replace, replacement, expected):
+def test_replace_variants(model, expected):
     df = pd.DataFrame(
         {
-            "a": ["x1", "x2", "y3"],
-            "b": ["z", "xx", "w"],
+            "name": ["Alice", "Bob", "Charlie", "123"],
+            "city": ["London", "Paris", "London", "Berlin"],
+            "notes": ["abc123", "xyz", "123abc", "000"],
         }
     )
 
-    tableset = Tableset([Table("data", df)])
-    model = {
-        "table": "data",
-        "columns": ["a", "b"],
-        "to_replace": to_replace,
-        "replacement": replacement,
-        "use_regex": use_regex,
-    }
-
+    tableset = Tableset([Table("people", df.copy())])
     op = Replace(model)
     result = op.operate(tableset)
-    pdt.assert_frame_equal(result.get_df("data"), expected)
+
+    pdt.assert_frame_equal(result.get_df("people"), expected)

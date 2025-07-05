@@ -1,63 +1,58 @@
-"""Replace text operation."""
+"""Replace values in selected columns."""
 
 from pydantic import Field
 
 from datarush.core.dataflow import Operation, Tableset
-from datarush.core.types import BaseOperationModel, ColumnStr, TableStr
+from datarush.core.types import BaseOperationModel, ColumnStr, StringMap, TableStr
 
 
 class ReplaceModel(BaseOperationModel):
-    """Replace operation model."""
+    """Model for Replace operation."""
 
     table: TableStr = Field(title="Table", description="Table to modify")
     columns: list[ColumnStr] = Field(
         title="Columns",
-        description="Columns to apply the replacement to",
+        description="Columns to apply replacement. If empty, all columns are used.",
+        default_factory=list,
     )
-    to_replace: str = Field(
-        title="Value to Replace",
-        description="Substring or regex pattern to be replaced",
+    to_replace: StringMap = Field(
+        title="Replacements Map (old -> new)",
+        description="Map of values to replace: {old: new}",
+        default_factory=StringMap,
     )
-    replacement: str = Field(
-        title="Replacement",
-        description="String to replace with",
-    )
-    use_regex: bool = Field(
+    regex: bool = Field(
         title="Use Regex",
-        description="Whether to treat 'Value to Replace' as a regex pattern",
+        description="If true, treat keys as regular expressions",
         default=False,
     )
 
 
 class Replace(Operation):
-    """Replace values in one or more columns."""
+    """Replace values in DataFrame columns."""
 
     name = "replace"
-    title = "Replace Values"
-    description = "Replace string values in selected columns, optionally using regex"
+    title = "Replace"
+    description = "Replace values or regex patterns in selected columns"
     model: ReplaceModel
 
     def summary(self) -> str:
         """Provide operation summary."""
-        method = "regex" if self.model.use_regex else "literal"
-        return (
-            f"Replace {method} `{self.model.to_replace}` with `{self.model.replacement}` "
-            f"in columns {', '.join(f'**{col}**' for col in self.model.columns)} "
-            f"of `{self.model.table}`"
+        cols = (
+            ", ".join(f"**{col}**" for col in self.model.columns)
+            if self.model.columns
+            else "all columns"
         )
+        mode = "regex" if self.model.regex else "exact match"
+        return f"Replace values in {cols} of `{self.model.table}` ({mode})"
 
     def operate(self, tableset: Tableset) -> Tableset:
-        """Run operation."""
+        """Apply the replacement."""
         df = tableset.get_df(self.model.table)
+        target_columns = self.model.columns or df.columns.tolist()
 
-        for col in self.model.columns:
-            df[col] = (
-                df[col]
-                .astype(str)
-                .str.replace(
-                    self.model.to_replace, self.model.replacement, regex=self.model.use_regex
-                )
-            )
+        df[target_columns] = df[target_columns].replace(
+            to_replace=self.model.to_replace, regex=self.model.regex
+        )
 
         tableset.set_df(self.model.table, df)
         return tableset
