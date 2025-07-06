@@ -17,7 +17,10 @@ This guide covers all available operations in DataRush, organized by category. E
     - [Rename Table](#rename-table)
   - [Data Cleaning](#data-cleaning)
     - [Drop NA Values](#drop-na-values)
+    - [Fill NA Values](#fill-na-values)
+    - [Normalize Empty Values](#normalize-empty-values)
     - [Deduplicate Rows](#deduplicate-rows)
+    - [Deduplicate Column Values](#deduplicate-column-values)
     - [Replace](#replace)
   - [Data Type Operations](#data-type-operations)
     - [As Type](#as-type)
@@ -235,6 +238,57 @@ Operations that modify, filter, and transform data.
 
 ---
 
+#### Fill NA Values
+
+**Operation**: `Fill NA`  
+**Description**: Fill missing values in selected columns using various methods.
+
+**Parameters**:
+
+- `table` (TableStr): Table to modify
+- `columns` (list[ColumnStr]): Columns to fill (empty = all columns)
+- `method` (Literal): Fill method (ffill, bfill, mean, median, mode, constant)
+- `value` (str): Fill value when method is 'constant'
+- `limit` (int): Maximum consecutive fills for ffill/bfill
+- `axis` (Literal): Fill direction (rows, columns)
+
+**Example**:
+
+```json
+{
+  "table": "employees",
+  "columns": ["salary", "department"],
+  "method": "constant",
+  "value": "0",
+  "axis": "rows"
+}
+```
+
+---
+
+#### Normalize Empty Values
+
+**Operation**: `Normalize Empty Values`  
+**Description**: Convert all empty-like values to null for consistency.
+
+**Parameters**:
+
+- `table` (TableStr): Table to modify
+- `columns` (list[ColumnStr]): Columns to normalize (empty = all columns)
+- `custom_empty_values` (list[str]): Additional strings to treat as empty
+
+**Example**:
+
+```json
+{
+  "table": "employees",
+  "columns": ["department", "notes"],
+  "custom_empty_values": ["N.A.", "NA", "Unknown", " "]
+}
+```
+
+---
+
 #### Deduplicate Rows
 
 **Operation**: `Deduplicate Rows`  
@@ -245,6 +299,27 @@ Operations that modify, filter, and transform data.
 - `table` (TableStr): Table to deduplicate
 - `columns` (list[ColumnStr]): Columns to consider for duplicates
 - `keep` (Literal): Which duplicate to keep (first, last, none)
+
+---
+
+#### Deduplicate Column Values
+
+**Operation**: `Deduplicate Column Values`  
+**Description**: Remove duplicates from list-like values inside each cell of a column.
+
+**Parameters**:
+
+- `table` (TableStr): Table to modify
+- `column` (ColumnStr): Column containing list-like values to deduplicate
+
+**Example**:
+
+```json
+{
+  "table": "employees",
+  "column": "skills"
+}
+```
 
 ---
 
@@ -486,31 +561,3 @@ Operations that write data to various destinations.
 
 ---
 
-## Operation Categories Summary
-
-| Category                     | Operations                                           | Count |
-| ---------------------------- | ---------------------------------------------------- | ----- |
-| **Sources**                  | Local File, S3 Object, S3 Dataset, HTTP Request      | 4     |
-| **Basic Transformations**    | Filter, Select, Sort, Rename, Copy                   | 5     |
-| **Data Cleaning**            | Drop NA, Deduplicate, Replace, Assert Columns        | 4     |
-| **Type Operations**          | As Type, Set Header, Unset Header                    | 3     |
-| **Data Manipulation**        | Join, Group By, Pivot, Concatenate, Melt             | 5     |
-| **Advanced Transformations** | Calculate, Derive, Parse JSON, Explode, Wide to Long | 5     |
-| **Sinks**                    | S3 Object, S3 Dataset                                | 2     |
-
-**Total**: 28 operations
-
-## Best Practices
-
-1. **Start with Sources**: Always begin your pipeline with a data source operation
-2. **Clean Early**: Apply data cleaning operations early in the pipeline
-3. **Validate Data**: Use Assert Has Columns to ensure data integrity
-4. **Use Meaningful Names**: Give tables and columns descriptive names
-5. **Test Incrementally**: Run operations one by one to verify results
-6. **Document Templates**: Save successful pipelines as templates for reuse
-
-## Next Steps
-
-- **[Operation Model Types](OperationModelTypes.md)** - Reference for supported field types
-- **[Advanced Usage](AdvancedUsage.md)** - Custom operations and Jinja2 templating
-- **[Templates](Templates.md)** - Creating reusable pipeline templates
