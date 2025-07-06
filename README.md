@@ -1,52 +1,62 @@
-# DataRush
+# DataRush Documentation
 
-No-Code Data Pipelines
+Welcome to the DataRush documentation! DataRush is a no-code data pipeline framework that allows you to build, execute, and manage data workflows through a visual interface or programmatic API.
 
-## Installation
-```bash
-pip install datarush
-```
+## Quick Start
 
-## Settings
+- **[Getting Started](docs/GettingStarted.md)** - Get up and running with DataRush in minutes
+- **[Configuration](docs/Configuration.md)** - Learn about environment variables and settings
 
-Before running the application, ensure the following environment variables are configured. The use of a `.env` file is supported.
+## Core Concepts
 
-| Name                             | Description                                                        | Default Value |
-| -------------------------------- | ------------------------------------------------------------------ | ------------- |
-| `TEMPLATE_STORE_TYPE`            | Specifies the template store type: `S3` or `FILESYSTEM`.           |               |
-| `TEMPLATE_STORE_S3_BUCKET`       | The S3 bucket to store templates when using the S3 store type.     |               |
-| `TEMPLATE_STORE_S3_PREFIX`       | The S3 prefix for templates when using the S3 store type.          | `datarush`    |
-| `TEMPLATE_STORE_FILESYSTEM_PATH` | The filesystem path for templates when using the filesystem store. | `.`           |
-| `S3_ENDPOINT`                    | The endpoint URL for the S3 service.                               |               |
-| `S3_ACCESS_KEY`                  | The access key for the S3 service.                                 |               |
-| `S3_SECRET_KEY`                  | The secret key for the S3 service.                                 |               |
-| `S3_DEFAULT_BUCKET`              | The default bucket suggested in the operations UI.                 |               |
+- **[Operations](docs/Operations.md)** - Complete guide to all available data operations
+- **[Operation Model Types](docs/OperationModelTypes.md)** - Reference for supported field types and UI elements
+- **[Templates](docs/Templates.md)** - How to create and use reusable data pipeline templates
 
-## Running UI
-To launch the DataRush user interface, follow these steps:
+## Advanced Topics
 
-1. Create a `run_ui.py` file to serve as the entry point for the Streamlit application:
-    ```python
-    from datarush.ui import run_ui
+- **[Advanced Usage](docs/AdvancedUsage.md)** - Jinja2 templating, custom operations, and advanced features
 
-    if __name__ == "__main__":
-        run_ui()
-    ```
 
-2. Start the application using the Streamlit command:
-    ```bash
-    streamlit run run_ui.py
-    ```
+## Development & Troubleshooting
 
-## Running Templates
-To execute a DataRush template, use the following commands:
+- **[Contributing](docs/Contributing.md)** - How to contribute to DataRushNo
+- **[Troubleshooting](docs/Troubleshooting.md)** - Common issues and solutions
 
-- For a template named `foo` with version `0.0.1`:
-    ```bash
-    python -m datarush --template "foo" --version "0.0.1"
-    ```
+## What is DataRush?
 
-- To pass additional input arguments supported by the template:
-    ```bash
-    python -m datarush --template "foo" --version "0.0.1" --other_argument "value"
-    ```
+DataRush is a Python-based framework for creating data pipelines without writing code. It provides:
+
+- **Visual Interface**: Web-based UI built with Streamlit for building pipelines
+- **Template System**: Reusable, versioned pipeline configurations
+- **Rich Operation Library**: 30+ built-in operations for data processing
+- **Multiple Execution Modes**: UI, CLI, and programmatic execution
+- **Cloud Integration**: Native S3 support for data sources and sinks
+
+## Key Features
+
+### Data Sources
+
+- Local files (CSV, JSON, Parquet)
+- S3 objects and datasets
+- HTTP API requests
+
+### Data Transformations
+
+- Filtering, sorting, and grouping
+- Joins and concatenations
+- Data type conversions
+- Aggregations and pivots
+- Custom calculations and derivations
+
+### Data Sinks
+
+- S3 object and dataset writing
+- Multiple output formats
+
+### Advanced Features
+
+- Jinja2 templating for dynamic values
+- Custom operation development
+- Parameterized templates
+- Version control for pipelines
