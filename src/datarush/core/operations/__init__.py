@@ -27,6 +27,7 @@ from datarush.core.operations.transformations import (
     dropna,
     explode,
     extract_regex_group,
+    fillna,
     filter_row,
     group_by,
     join,
@@ -105,6 +106,7 @@ for _op_type in [
     dict_to_columns.DictToColumns,
     replace.Replace,
     deduplicate_rows.DeduplicateRows,
+    fillna.FillNa,
     wide_to_long.WideToLong,
     # Sink
     s3_sink.S3ObjectSink,
