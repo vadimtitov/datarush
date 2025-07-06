@@ -25,11 +25,3 @@ DataRush is a no-code data pipeline framework that allows you to quickly build, 
 ## Advanced Topics
 
 - **[Advanced Usage](docs/AdvancedUsage.md)** - Jinja2 templating, custom operations, and advanced features
-
-
-## Development & Troubleshooting
-
-- **[Contributing](docs/Contributing.md)** - How to contribute to DataRushNo
-- **[Troubleshooting](docs/Troubleshooting.md)** - Common issues and solutions
-
-
