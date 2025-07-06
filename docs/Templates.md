@@ -180,21 +180,3 @@ run_template(
     }
 )
 ```
-
-### Programmatic Configuration
-
-```python
-from datarush import run_template
-from datarush.config import DatarushConfig
-
-config = DatarushConfig(
-    custom_operations=[MyCustomOperation]
-)
-
-run_template(
-    name="data_cleaning",
-    version="1.0.0",
-    config=config,
-    parameters={"input_file": "data.csv"}
-)
-```

@@ -53,32 +53,19 @@ S3_SECRET_KEY=your-secret-key
 S3_DEFAULT_BUCKET=my-data-bucket
 ```
 
-### MinIO Setup
-
-```bash
-# .env file
-TEMPLATE_STORE_TYPE=S3
-TEMPLATE_STORE_S3_BUCKET=datarush-templates
-TEMPLATE_STORE_S3_PREFIX=templates
-
-S3_ENDPOINT=http://localhost:9000
-S3_ACCESS_KEY=minioadmin
-S3_SECRET_KEY=minioadmin
-S3_DEFAULT_BUCKET=data-bucket
-```
 
 ## Programmatic Configuration
 
 ### DatarushConfig Class
 
-The `DatarushConfig` class allows you to configure DataRush programmatically. It primarily supports custom operations and S3 configuration overrides:
+The `DatarushConfig` class allows you to configure DataRush programmatically. It currently supports custom operations and S3 configuration overrides:
 
 ```python
-from datarush.config import DatarushConfig
+from datarush.config import DatarushConfig, S3Config
 
 config = DatarushConfig(
     custom_operations=[MyCustomOperation],
-    s3_config_factory=lambda: CustomS3Config()
+    s3_config_factory=lambda: S3Config()
 )
 ```
 
