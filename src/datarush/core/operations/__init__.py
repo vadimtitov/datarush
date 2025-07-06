@@ -32,6 +32,7 @@ from datarush.core.operations.transformations import (
     group_by,
     join,
     melt_table,
+    normalize_empty_values,
     parse_json_column,
     pivot_table,
     rename_table,
@@ -108,6 +109,7 @@ for _op_type in [
     deduplicate_rows.DeduplicateRows,
     fillna.FillNa,
     wide_to_long.WideToLong,
+    normalize_empty_values.NormalizeEmptyValues,
     # Sink
     s3_sink.S3ObjectSink,
     s3_dataset_sink.S3DatasetSink,
