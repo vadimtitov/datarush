@@ -1,52 +1,27 @@
 # DataRush
 
-No-Code Data Pipelines
+DataRush is a no-code data pipeline framework that allows you to quickly build, execute, and manage data workflows through a visual interface or programmatic API.
+## Key Features
+- **Visual Interface**: Web-based UI built with Streamlit for building pipelines
+- **Template System**: Reusable, versioned pipeline configurations
+- **Rich Operation Library**: 30+ built-in operations for data processing
+- **Custom Operations**: Extensible framework for implementing your own data operations
+- **Multiple Execution Modes**: UI, CLI, and programmatic execution
+- **Cloud Integration**: Native S3 support for data sources and sinks
+- **Jinja2 Templating**: Dynamic, parametrizable pipelines with powerful template expressions
 
-## Installation
-```bash
-pip install datarush
-```
 
-## Settings
+## Quick Start
 
-Before running the application, ensure the following environment variables are configured. The use of a `.env` file is supported.
+- **[Getting Started](docs/GettingStarted.md)** - Get up and running with DataRush in minutes
+- **[Configuration](docs/Configuration.md)** - Learn about environment variables and settings
 
-| Name                             | Description                                                        | Default Value |
-| -------------------------------- | ------------------------------------------------------------------ | ------------- |
-| `TEMPLATE_STORE_TYPE`            | Specifies the template store type: `S3` or `FILESYSTEM`.           |               |
-| `TEMPLATE_STORE_S3_BUCKET`       | The S3 bucket to store templates when using the S3 store type.     |               |
-| `TEMPLATE_STORE_S3_PREFIX`       | The S3 prefix for templates when using the S3 store type.          | `datarush`    |
-| `TEMPLATE_STORE_FILESYSTEM_PATH` | The filesystem path for templates when using the filesystem store. | `.`           |
-| `S3_ENDPOINT`                    | The endpoint URL for the S3 service.                               |               |
-| `S3_ACCESS_KEY`                  | The access key for the S3 service.                                 |               |
-| `S3_SECRET_KEY`                  | The secret key for the S3 service.                                 |               |
-| `S3_DEFAULT_BUCKET`              | The default bucket suggested in the operations UI.                 |               |
+## Core Concepts
 
-## Running UI
-To launch the DataRush user interface, follow these steps:
+- **[Operations](docs/Operations.md)** - Complete guide to all available data operations
+- **[Operation Model Types](docs/OperationModelTypes.md)** - Reference for supported field types and UI elements
+- **[Templates](docs/Templates.md)** - How to create and use reusable data pipeline templates
 
-1. Create a `run_ui.py` file to serve as the entry point for the Streamlit application:
-    ```python
-    from datarush.ui import run_ui
+## Advanced Topics
 
-    if __name__ == "__main__":
-        run_ui()
-    ```
-
-2. Start the application using the Streamlit command:
-    ```bash
-    streamlit run run_ui.py
-    ```
-
-## Running Templates
-To execute a DataRush template, use the following commands:
-
-- For a template named `foo` with version `0.0.1`:
-    ```bash
-    python -m datarush --template "foo" --version "0.0.1"
-    ```
-
-- To pass additional input arguments supported by the template:
-    ```bash
-    python -m datarush --template "foo" --version "0.0.1" --other_argument "value"
-    ```
+- **[Advanced Usage](docs/AdvancedUsage.md)** - Jinja2 templating, custom operations, and advanced features
