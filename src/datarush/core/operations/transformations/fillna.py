@@ -114,9 +114,11 @@ class FillNa(Operation):
                                 val = int(float(self.model.value))
                             df[col] = df[col].fillna(val)
                         except ValueError:
-                            raise ValueError(
-                                f"Cannot convert '{self.model.value}' to numeric for column '{col}'"
-                            )
+                            # If we can't convert the string to numeric, convert the column to string type
+                            # This allows filling numeric columns with string values
+                            # First convert to string, then replace 'nan' strings with the fill value
+                            df[col] = df[col].astype(str)
+                            df[col] = df[col].replace("nan", self.model.value)
                     elif pd.api.types.is_datetime64_any_dtype(df[col]):
                         # For datetime columns, try to parse the value
                         try:
@@ -124,7 +126,8 @@ class FillNa(Operation):
                             df[col] = df[col].fillna(val)
                         except ValueError:
                             raise ValueError(
-                                f"Cannot convert '{self.model.value}' to datetime for column '{col}'"
+                                f"Cannot convert '{self.model.value}' to datetime for column '{col}'. "
+                                f"Consider converting the column to string type first using the 'astype' operation."
                             )
                     else:
                         # For string/object columns, use as-is

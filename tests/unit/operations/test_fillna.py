@@ -185,17 +185,20 @@ def test_fillna_datetime_constant():
 
 
 def test_fillna_invalid_numeric_value():
-    """Test error handling for invalid numeric values."""
+    """Test handling of string values for numeric columns."""
     df = pd.DataFrame({"col1": [1, None, 3]})
 
     model = {"table": "test_table", "method": "constant", "value": "not_a_number"}
 
     tableset = Tableset([Table("test_table", df.copy())])
     op = FillNa(model)
+    result = op.operate(tableset)
+    result_df = result.get_df("test_table")
 
-    # Should raise ValueError for invalid numeric conversion
-    with pytest.raises(ValueError, match="Cannot convert 'not_a_number' to numeric"):
-        op.operate(tableset)
+    # Should automatically convert numeric column to string and fill with the string value
+    assert result_df["col1"].iloc[1] == "not_a_number"
+    assert result_df["col1"].iloc[0] == "1.0"  # Original numeric values converted to string
+    assert result_df["col1"].iloc[2] == "3.0"
 
 
 def test_fillna_invalid_datetime_value():
@@ -235,3 +238,24 @@ def test_fillna_summary_all_columns():
     summary = op.summary()
     expected = "Fill NA values in all columns of `test_table` using mean"
     assert summary == expected
+
+
+def test_fillna_string_value_for_numeric_column():
+    """Test filling numeric column with string value (user's scenario)."""
+    df = pd.DataFrame({"department_id": [1, None, 3, None, 5]})
+
+    model = {"table": "test_table", "method": "constant", "value": "XXXX"}
+
+    tableset = Tableset([Table("test_table", df.copy())])
+    op = FillNa(model)
+    result = op.operate(tableset)
+    result_df = result.get_df("test_table")
+
+    # Should automatically convert numeric column to string and fill with 'XXXX'
+    assert result_df["department_id"].iloc[1] == "XXXX"
+    assert result_df["department_id"].iloc[3] == "XXXX"
+    assert (
+        result_df["department_id"].iloc[0] == "1.0"
+    )  # Original numeric values converted to string
+    assert result_df["department_id"].iloc[2] == "3.0"
+    assert result_df["department_id"].iloc[4] == "5.0"
