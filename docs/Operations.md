@@ -250,6 +250,33 @@ Operations that modify, filter, and transform data.
 
 ---
 
+#### Split Table On Column
+
+**Operation**: `Split Table On Column`  
+**Description**: Split a table into multiple tables based on unique values in a column.
+
+**Parameters**:
+
+- `table` (TableStr): Table to split
+- `split_column` (ColumnStr): Column to split on
+- `drop_original_table` (bool): Whether to remove the original table after splitting (default: false)
+- `drop_split_column` (bool): Whether to remove the split column from resulting tables (default: false)
+
+**Example**:
+
+```json
+{
+  "table": "employees",
+  "split_column": "department",
+  "drop_original_table": true,
+  "drop_split_column": false
+}
+```
+
+This will create separate tables named "IT", "HR", "Sales", etc., each containing only the rows where the department column equals that value.
+
+---
+
 ### Data Cleaning
 
 #### Drop NA Values
