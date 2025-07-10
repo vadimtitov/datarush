@@ -41,6 +41,7 @@ from datarush.core.operations.transformations import (
     select_columns,
     set_header,
     sort,
+    split_table_on_column,
     transpose,
     unset_header,
     wide_to_long,
@@ -112,6 +113,7 @@ for _op_type in [
     fillna.FillNa,
     wide_to_long.WideToLong,
     normalize_empty_values.NormalizeEmptyValues,
+    split_table_on_column.SplitTableOnColumn,
     # Sink
     s3_sink.S3ObjectSink,
     s3_dataset_sink.S3DatasetSink,
