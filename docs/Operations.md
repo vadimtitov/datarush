@@ -277,6 +277,31 @@ This will create separate tables named "IT", "HR", "Sales", etc., each containin
 
 ---
 
+#### Change Case
+
+**Operation**: `Change Case`  
+**Description**: Change the case of string values in specified columns.
+
+**Parameters**:
+
+- `table` (TableStr): Table to modify
+- `columns` (list[ColumnStr]): Columns to change case. If empty, all string columns are used.
+- `case` (Literal): Case transformation to apply: upper, lower, capitalize, title, swapcase, casefold
+
+**Example**:
+
+```json
+{
+  "table": "employees",
+  "columns": ["name", "department"],
+  "case": "upper"
+}
+```
+
+This will convert all values in the "name" and "department" columns to uppercase.
+
+---
+
 ### Data Cleaning
 
 #### Drop NA Values
