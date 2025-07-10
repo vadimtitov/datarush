@@ -225,6 +225,83 @@ Operations that modify, filter, and transform data.
 
 ---
 
+#### Rename Columns
+
+**Operation**: `Rename Columns`  
+**Description**: Rename columns using a mapping of old names to new names.
+
+**Parameters**:
+
+- `table` (TableStr): Table to modify
+- `column_mapping` (StringMap): Map of column names to rename: {old_column_name: new_column_name}
+
+**Example**:
+
+```json
+{
+  "table": "employees",
+  "column_mapping": {
+    "emp_id": "employee_id",
+    "dept": "department",
+    "sal": "salary"
+  }
+}
+```
+
+---
+
+#### Split Table On Column
+
+**Operation**: `Split Table On Column`  
+**Description**: Split a table into multiple tables based on unique values in a column.
+
+**Parameters**:
+
+- `table` (TableStr): Table to split
+- `split_column` (ColumnStr): Column to split on
+- `drop_original_table` (bool): Whether to remove the original table after splitting (default: false)
+- `drop_split_column` (bool): Whether to remove the split column from resulting tables (default: false)
+
+**Example**:
+
+```json
+{
+  "table": "employees",
+  "split_column": "department",
+  "drop_original_table": true,
+  "drop_split_column": false
+}
+```
+
+This will create separate tables named "IT", "HR", "Sales", etc., each containing only the rows where the department column equals that value.
+
+---
+
+#### Change Case
+
+**Operation**: `Change Case`  
+**Description**: Change the case of string values in specified columns.
+
+**Parameters**:
+
+- `table` (TableStr): Table to modify
+- `columns` (list[ColumnStr]): Columns to change case. If empty, all string columns are used.
+- `case` (Literal): Case transformation to apply: upper, lower, capitalize, title, swapcase, casefold
+
+**Example**:
+
+```json
+{
+  "table": "employees",
+  "columns": ["name", "department"],
+  "case": "upper"
+}
+```
+
+This will convert all values in the "name" and "department" columns to uppercase.
+
+---
+
 ### Data Cleaning
 
 #### Drop NA Values
