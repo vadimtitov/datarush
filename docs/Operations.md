@@ -225,6 +225,31 @@ Operations that modify, filter, and transform data.
 
 ---
 
+#### Rename Columns
+
+**Operation**: `Rename Columns`  
+**Description**: Rename columns using a mapping of old names to new names.
+
+**Parameters**:
+
+- `table` (TableStr): Table to modify
+- `column_mapping` (StringMap): Map of column names to rename: {old_column_name: new_column_name}
+
+**Example**:
+
+```json
+{
+  "table": "employees",
+  "column_mapping": {
+    "emp_id": "employee_id",
+    "dept": "department",
+    "sal": "salary"
+  }
+}
+```
+
+---
+
 ### Data Cleaning
 
 #### Drop NA Values
