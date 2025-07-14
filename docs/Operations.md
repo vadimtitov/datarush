@@ -303,6 +303,31 @@ This will convert all values in the "name" and "department" columns to uppercase
 
 ---
 
+#### Strip
+
+**Operation**: `Strip`  
+**Description**: Remove leading and trailing whitespace (or specified characters) from string values.
+
+**Parameters**:
+
+- `table` (TableStr): Table to modify
+- `columns` (list[ColumnStr]): Columns to strip whitespace from. If empty, all string columns are used.
+- `strip_type` (Literal): Type of stripping to apply: both (both sides), left (left only), right (right only)
+- `chars` (str): Specific characters to remove (default: whitespace). Leave empty for default whitespace removal.
+
+**Example**:
+
+```json
+{
+  "table": "employees",
+  "columns": ["name", "department"],
+  "strip_type": "both",
+  "chars": ""
+}
+```
+
+---
+
 ### Data Cleaning
 
 #### Drop NA Values
