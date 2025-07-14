@@ -39,14 +39,42 @@ def show_tables() -> None:
         st.write("No tables loaded, use operations to load tables")
         return
 
-    selected_table_name = st.selectbox(
+    table_select_section, display_type_section = st.columns([6, 2])
+
+    selected_table_name = table_select_section.selectbox(
         "Select Table to Display",
         options=list(dataflow.current_tableset),
+    )
+    display_type = display_type_section.selectbox(
+        "Display Type",
+        options=["Table", "JSON", "Row JSON", "Raw"],
+        help="Choose how to display the table data",
     )
 
     if selected_table_name:
         table = dataflow.current_tableset[selected_table_name]
-        st.dataframe(table.df, height=800)
+
+        if display_type == "Table":
+            st.dataframe(table.df, height=800)
+        elif display_type == "JSON":
+            # Convert DataFrame to JSON records format
+            json_data = table.df.to_dict(orient="records")
+            st.json(json_data)
+        elif display_type == "Row JSON":
+            # Display each row as a separate JSON object
+            for i, row in table.df.iterrows():
+                st.json(row.to_dict())
+                if i < len(table.df) - 1:  # Don't add separator after last row
+                    st.divider()
+        elif display_type == "Raw":
+            # Display raw DataFrame info and structure
+            st.write("**DataFrame Info:**")
+            st.write(f"Shape: {table.df.shape}")
+            st.write(f"Columns: {list(table.df.columns)}")
+            st.write("Data Types:")
+            st.write(table.df.dtypes.to_dict())
+            st.write("**Raw Data:**")
+            st.code(str(table.df))
 
 
 def show_operations() -> None:
