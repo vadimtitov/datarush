@@ -24,6 +24,7 @@ This guide covers all available operations in DataRush, organized by category. E
     - [Replace](#replace)
   - [Data Type Operations](#data-type-operations)
     - [As Type](#as-type)
+    - [Parse Datetime](#parse-datetime)
     - [Set Header](#set-header)
     - [Unset Header](#unset-header)
   - [Data Manipulation](#data-manipulation)
@@ -441,6 +442,41 @@ This will convert all values in the "name" and "department" columns to uppercase
 - `column` (ColumnStr): Column to convert
 - `dtype` (Literal): Target type (int, float, string, boolean, category)
 - `errors` (Literal): Error handling (raise, ignore)
+
+---
+
+#### Parse Datetime
+
+**Operation**: `Parse Datetime`  
+**Description**: Parse datetime strings in a column using dateparser with configurable settings.
+
+**Parameters**:
+
+- `table` (TableStr): Table to modify
+- `column` (ColumnStr): Column containing datetime strings to parse
+- `language` (Literal): Language for parsing (en, es, fr, de, it, pt, ru, ja, zh, ar) (default: en)
+- `date_order` (Literal): Day/Month/Year order (DMY, MDY, YMD) (default: DMY)
+- `timezone` (str): Timezone for parsing (e.g., 'UTC', 'America/New_York') (default: UTC)
+- `format` (list[str]): List of explicit datetime formats to try (e.g., ['%Y-%m-%d', '%m/%d/%Y']). If empty, uses dateparser's automatic detection
+- `return_type` (Literal): Return type (datetime, date, timestamp) (default: datetime)
+- `on_error` (Literal): Error handling (null, error) (default: null)
+
+**Example**:
+
+```json
+{
+  "table": "events",
+  "column": "event_date",
+  "language": "en",
+  "date_order": "DMY",
+  "timezone": "UTC",
+  "format": ["%Y-%m-%d", "%d/%m/%Y"],
+  "return_type": "datetime",
+  "on_error": "null"
+}
+```
+
+This will parse datetime strings in the "event_date" column using European date order (DMY) and convert them to datetime objects. If parsing fails, null values will be inserted.
 
 ---
 

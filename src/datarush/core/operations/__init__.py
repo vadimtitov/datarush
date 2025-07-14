@@ -34,6 +34,7 @@ from datarush.core.operations.transformations import (
     join,
     melt_table,
     normalize_empty_values,
+    parse_datetime,
     parse_json_column,
     pivot_table,
     rename_columns,
@@ -115,6 +116,7 @@ for _op_type in [
     fillna.FillNa,
     wide_to_long.WideToLong,
     normalize_empty_values.NormalizeEmptyValues,
+    parse_datetime.ParseDatetime,
     split_table_on_column.SplitTableOnColumn,
     # Sink
     s3_sink.S3ObjectSink,
