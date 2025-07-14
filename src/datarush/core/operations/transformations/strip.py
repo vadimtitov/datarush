@@ -75,10 +75,11 @@ class Strip(Operation):
             else:  # right
                 method = "rstrip"
 
+            str_method = getattr(df[column].astype(str).str, method)
             if self.model.chars:
-                df[column] = df[column].astype(str).str.__getattribute__(method)(self.model.chars)
+                df[column] = str_method(self.model.chars)
             else:
-                df[column] = df[column].astype(str).str.__getattribute__(method)()
+                df[column] = str_method()
 
         tableset.set_df(self.model.table, df)
         return tableset
