@@ -62,7 +62,7 @@ class ChangeCase(Operation):
         # Apply case transformation to each target column
         for column in target_columns:
             # Convert to string and apply case transformation
-            df[column] = df[column].astype(str).str.__getattribute__(self.model.case)()
+            df[column] = getattr(df[column].astype(str).str, self.model.case)()
 
         tableset.set_df(self.model.table, df)
         return tableset
