@@ -24,6 +24,7 @@ This guide covers all available operations in DataRush, organized by category. E
     - [Replace](#replace)
   - [Data Type Operations](#data-type-operations)
     - [As Type](#as-type)
+    - [Parse Datetime](#parse-datetime)
     - [Set Header](#set-header)
     - [Unset Header](#unset-header)
   - [Data Manipulation](#data-manipulation)
@@ -225,6 +226,108 @@ Operations that modify, filter, and transform data.
 
 ---
 
+#### Rename Columns
+
+**Operation**: `Rename Columns`  
+**Description**: Rename columns using a mapping of old names to new names.
+
+**Parameters**:
+
+- `table` (TableStr): Table to modify
+- `column_mapping` (StringMap): Map of column names to rename: {old_column_name: new_column_name}
+
+**Example**:
+
+```json
+{
+  "table": "employees",
+  "column_mapping": {
+    "emp_id": "employee_id",
+    "dept": "department",
+    "sal": "salary"
+  }
+}
+```
+
+---
+
+#### Split Table On Column
+
+**Operation**: `Split Table On Column`  
+**Description**: Split a table into multiple tables based on unique values in a column.
+
+**Parameters**:
+
+- `table` (TableStr): Table to split
+- `split_column` (ColumnStr): Column to split on
+- `drop_original_table` (bool): Whether to remove the original table after splitting (default: false)
+- `drop_split_column` (bool): Whether to remove the split column from resulting tables (default: false)
+
+**Example**:
+
+```json
+{
+  "table": "employees",
+  "split_column": "department",
+  "drop_original_table": true,
+  "drop_split_column": false
+}
+```
+
+This will create separate tables named "IT", "HR", "Sales", etc., each containing only the rows where the department column equals that value.
+
+---
+
+#### Change Case
+
+**Operation**: `Change Case`  
+**Description**: Change the case of string values in specified columns.
+
+**Parameters**:
+
+- `table` (TableStr): Table to modify
+- `columns` (list[ColumnStr]): Columns to change case. If empty, all string columns are used.
+- `case` (Literal): Case transformation to apply: upper, lower, capitalize, title, swapcase, casefold
+
+**Example**:
+
+```json
+{
+  "table": "employees",
+  "columns": ["name", "department"],
+  "case": "upper"
+}
+```
+
+This will convert all values in the "name" and "department" columns to uppercase.
+
+---
+
+#### Strip
+
+**Operation**: `Strip`  
+**Description**: Remove leading and trailing whitespace (or specified characters) from string values.
+
+**Parameters**:
+
+- `table` (TableStr): Table to modify
+- `columns` (list[ColumnStr]): Columns to strip whitespace from. If empty, all string columns are used.
+- `strip_type` (Literal): Type of stripping to apply: both (both sides), left (left only), right (right only)
+- `chars` (str): Specific characters to remove (default: whitespace). Leave empty for default whitespace removal.
+
+**Example**:
+
+```json
+{
+  "table": "employees",
+  "columns": ["name", "department"],
+  "strip_type": "both",
+  "chars": ""
+}
+```
+
+---
+
 ### Data Cleaning
 
 #### Drop NA Values
@@ -364,6 +467,41 @@ Operations that modify, filter, and transform data.
 - `column` (ColumnStr): Column to convert
 - `dtype` (Literal): Target type (int, float, string, boolean, category)
 - `errors` (Literal): Error handling (raise, ignore)
+
+---
+
+#### Parse Datetime
+
+**Operation**: `Parse Datetime`  
+**Description**: Parse datetime strings in a column using dateparser with configurable settings.
+
+**Parameters**:
+
+- `table` (TableStr): Table to modify
+- `column` (ColumnStr): Column containing datetime strings to parse
+- `language` (Literal): Language for parsing (en, es, fr, de, it, pt, ru, ja, zh, ar) (default: en)
+- `date_order` (Literal): Day/Month/Year order (DMY, MDY, YMD) (default: DMY)
+- `timezone` (str): Timezone for parsing (e.g., 'UTC', 'America/New_York') (default: UTC)
+- `format` (list[str]): List of explicit datetime formats to try (e.g., ['%Y-%m-%d', '%m/%d/%Y']). If empty, uses dateparser's automatic detection
+- `return_type` (Literal): Return type (datetime, date, timestamp) (default: datetime)
+- `on_error` (Literal): Error handling (null, error) (default: null)
+
+**Example**:
+
+```json
+{
+  "table": "events",
+  "column": "event_date",
+  "language": "en",
+  "date_order": "DMY",
+  "timezone": "UTC",
+  "format": ["%Y-%m-%d", "%d/%m/%Y"],
+  "return_type": "datetime",
+  "on_error": "null"
+}
+```
+
+This will parse datetime strings in the "event_date" column using European date order (DMY) and convert them to datetime objects. If parsing fails, null values will be inserted.
 
 ---
 

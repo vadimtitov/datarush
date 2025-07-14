@@ -9,3 +9,4 @@ streamlit-ace
 streamlit-modal
 jinja2
 awswrangler
+dateparser
